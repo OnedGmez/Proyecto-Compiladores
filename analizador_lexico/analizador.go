@@ -114,7 +114,7 @@ func (b *bucket) modificarBucketNode(key string, linea string) {
 				nodoAnterior = nodoModificar
 				nodoModificar = nodoModificar.next
 			} else {
-				nodoModificar.key[0][3] = nodoModificar.key[0][3] + "," + linea
+				nodoModificar.key[0][4] = nodoModificar.key[0][4] + "," + linea
 				if nodoAnterior != nil {
 					nodoAnterior.next = nodoModificar
 				} else {
@@ -141,14 +141,8 @@ func initializeHashTable() *hashtable {
 var tablaSimbolos *hashtable = initializeHashTable()
 
 func main() {
-
-	var datos = [1][5]string{{"&(", "INT", "1", "4", "12"}}
-	tablaSimbolos.insertInHashTable(datos)
-	datos = [1][5]string{{"''", "INT", "8", "4", "12"}}
-	tablaSimbolos.insertInHashTable(datos)
-	tablaSimbolos.deleteInHashTable("''")
-	fmt.Println(tablaSimbolos.searchInHashTable("''"))
-	tablaSimbolos.modificarInHashTable("&(", "13")
+	llenarTS()
+	fmt.Println(tablaSimbolos.searchInHashTable("INT"))
 }
 
 //Funciones para analisis
@@ -161,7 +155,7 @@ func llenarTS() {
 	var nombreFile string = "file_TS.csv"
 	var path string = "../data_sources/" + nombreFile
 	file, err := ioutil.ReadFile(path)
-	if err != nil {
+	if err == nil {
 		renglonData := Tokenizador([]byte(file), "\n")
 		for _, renglon := range renglonData {
 			ix := 0
