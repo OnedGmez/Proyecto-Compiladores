@@ -147,11 +147,17 @@ var numLinea int = 0
 func main() {
 	var nombreArchivo string
 	llenarTS()
+	fmt.Println("Analisis iniciado")
 	fmt.Println("Ingrese el nombre del archivo con su extensión")
 	fmt.Scanln(&nombreArchivo)
 	dataLimpia := AnalizarSQL(nombreArchivo, 1)
 	nombreArchivo = "dataLimpia_" + nombreArchivo
 	generarArchivos([]byte(dataLimpia), nombreArchivo)
+	fmt.Println("Abtención de Token, iniciada")
+	dataTokensLexemas := AnalizarSQL(nombreArchivo, 2)
+	nombreArchivo = strings.Replace(nombreArchivo, "dataLimpia_", "tokensLexemas_", 1)
+	nombreArchivo = strings.Replace(nombreArchivo, "sql", "txt", 1)
+	generarArchivos([]byte(dataTokensLexemas), nombreArchivo)
 }
 
 //Funciones para analisis
