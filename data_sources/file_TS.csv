@@ -1,0 +1,27 @@
+Nombre;Tipo;Bytes;Linea(declarada);Lineas(uso)
+BIGINT;V. Numerica exacta;8;NE;NE
+NUMERIC;V. Numerica exacta;17;NE;NE
+BIT;V. Numerica exacta;1;NE;NE
+SMALLINT;V. Numerica exacta;2;NE;NE
+DECIMAL;V. Numerica exacta;17;NE;NE
+SMALLMONEY;V. Numerica exacta;4;NE;NE
+INT;V. Numerica exacta;4;NE;NE
+TINYINT;V. Numerica exacta;1;NE;NE
+MONEY;V. Numerica exacta;8;NE;NE
+FLOAT;V. Numerica aproximada;8;NE;NE
+REAL;V. Numerica aproximada;8;NE;NE
+DATE;V. de Fecha y Hora;NE;NE;NE
+DATETIMEOFFSET;V. de Fecha y Hora;NE;NE;NE
+DATETIME2;V. de Fecha y Hora;NE;NE;NE
+SMALLDATETIME;V. de Fecha y Hora;NE;NE;NE
+DATETIME;V. de Fecha y Hora;NE;NE;NE
+TIME;V. de Fecha y Hora;NE;NE;NE
+CHAR;V. de Cadena de Caracteres;8000;NE;NE
+VARCHAR;V. de Cadena de Caracteres;8000;NE;NE
+TEXT;V. de Cadena de Caracteres;2147483647;NE;NE
+NCHAR;V. de Cadena de Caracteres Unicode;4000;NE;NE
+NVARCHAR;V. de Cadena de Caracteres Unicode;4000;NE;NE
+NTEXT;V. de Cadena de Caracteres Unicode;1073741823;NE;NE
+BINARY;V. de Cadena Binaria;8000;NE;NE
+VARBINARY;V. de Cadena Binaria;2147483647;NE;NE
+IMAGE;V. de Cadena Binaria;2147483647;NE;NE
