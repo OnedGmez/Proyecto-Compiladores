@@ -1,9 +1,9 @@
 /*
 	# def: Analizador léxico para el lenguaje de consultas estructurado (SQL)
 	# Tabla de símbolos: Inicialmente contendrá cargadas las palabras resevardas y adicionalmente la utilizaremos para almacenar las variables definidas por el usuario
-		- Estructura para palabras reservadas: Nombre, Tipo, NE, NE
+		- Estructura para palabras reservadas: Nombre, Tipo, Bytes, NE, NE
 			* NE: NO ESPECIFICADO
-		- Estructura para variables de usuario: Nombre, Tipo, Linea(declarada), Lineas(Uso)
+		- Estructura para variables de usuario: Nombre, Tipo, Bytes, Linea(declarada), Lineas(Uso)
 */
 
 package main
@@ -30,7 +30,7 @@ type bucket struct {
 }
 
 type bucketNode struct {
-	key  [1][4]string
+	key  [1][5]string
 	next *bucketNode
 }
 
@@ -44,12 +44,12 @@ func hash(key string) int {
 	return indice % tamHashTable
 }
 
-func (h *hashtable) insertInHashTable(key [1][4]string) {
+func (h *hashtable) insertInHashTable(key [1][5]string) {
 	index := hash(key[0][0])
 	h.array[index].insertBucketNode(key)
 }
 
-func (b *bucket) insertBucketNode(k [1][4]string) {
+func (b *bucket) insertBucketNode(k [1][5]string) {
 	keyNode := &bucketNode{key: k}
 	keyNode.next = b.head
 	b.head = keyNode
@@ -142,9 +142,9 @@ var tablaSimbolos *hashtable = initializeHashTable()
 
 func main() {
 
-	var datos = [1][4]string{{"&(", "INT", "4", "12"}}
+	var datos = [1][5]string{{"&(", "INT", "1", "4", "12"}}
 	tablaSimbolos.insertInHashTable(datos)
-	datos = [1][4]string{{"''", "INT", "4", "12"}}
+	datos = [1][5]string{{"''", "INT", "8", "4", "12"}}
 	tablaSimbolos.insertInHashTable(datos)
 	tablaSimbolos.deleteInHashTable("''")
 	fmt.Println(tablaSimbolos.searchInHashTable("''"))
@@ -157,7 +157,7 @@ func main() {
 # def: Función que nos ayudará a cargar la tabla de símbolos en la primera carga del analizador
 */
 func llenarTS() {
-	var dataTS [1][4]string
+	var dataTS [1][5]string
 	var nombreFile string = "file_TS.csv"
 	var path string = "../data_sources/" + nombreFile
 	file, err := ioutil.ReadFile(path)
