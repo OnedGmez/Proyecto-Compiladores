@@ -25,3 +25,76 @@ NTEXT,V. de Cadena de Caracteres Unicode,1073741823,NE,NE,SQL
 BINARY,V. de Cadena Binaria,8000,NE,NE,SQL
 VARBINARY,V. de Cadena Binaria,2147483647,NE,NE,SQL
 IMAGE,V. de Cadena Binaria,2147483647,NE,NE,SQL
+CREATE,Comando de DDL,NE,NE,NE,SQL
+ALTER,Comando de DDL,NE,NE,NE,SQL
+DROP,Comando de DDL,NE,NE,NE,SQL
+TRUNCATE,Comando de DDL,NE,NE,NE,SQL
+INSERT,Comando de DML,NE,NE,NE,SQL
+UPDATE,Comando de DML,NE,NE,NE,SQL
+DELETE,Comando de DML,NE,NE,NE,SQL
+GRANT,Comando de DCL,NE,NE,NE,SQL
+REVOKE,Comando de DCL,NE,NE,NE,SQL
+COMMIT,Comando de TCL,NE,NE,NE,SQL
+ROLLBACK,Comando de TCL,NE,NE,NE,SQL
+SAVEPOINT,Comando de TCL,NE,NE,NE,SQL
+SELECT,Comando de DQL,NE,NE,NE,SQL
++,Operador Aritmetico,NE,NE,NE,SQL
+-,Operador Aritmetico,NE,NE,NE,SQL
+*,Operador Aritmetico,NE,NE,NE,SQL
+/,Operador Aritmetico,NE,NE,NE,SQL
+%,Operador Aritmetico,NE,NE,NE,SQL
+=,Operador de Comparacion,NE,NE,NE,SQL
+!=,Operador de Comparacion,NE,NE,NE,SQL
+<>,Operador de Comparacion,NE,NE,NE,SQL
+>,Operador de Comparacion,NE,NE,NE,SQL
+<,Operador de Comparacion,NE,NE,NE,SQL
+>=,Operador de Comparacion,NE,NE,NE,SQL
+<=,Operador de Comparacion,NE,NE,NE,SQL
+!<,Operador de Comparacion,NE,NE,NE,SQL
+!>,Operador de Comparacion,NE,NE,NE,SQL
+ALL,Operador logico,NE,NE,NE,SQL
+AND,Operador logico,NE,NE,NE,SQL
+ANY,Operador logico,NE,NE,NE,SQL
+BETWEEN,Operador logico,NE,NE,NE,SQL
+IN,Operador logico,NE,NE,NE,SQL
+NOT,Operador logico,NE,NE,NE,SQL
+OR,Operador logico,NE,NE,NE,SQL
+EXISTS,Operador logico,NE,NE,NE,SQL
+LIKE,Operador logico,NE,NE,NE,SQL
+TABLE,P.R. para Declarar Tablas,NE,NE,NE,SQL
+VIEW,P.R. para Declarar Vistas,NE,NE,NE,SQL
+INDEX,P.R. para Declarar Index,NE,NE,NE,SQL
+STORED PROCEDURE,P.R. para Declarar SP,NE,NE,NE,SQL
+TRIGGER,P.R. para Declarar Disparadores,NE,NE,NE,SQL
+UNIQUE,P.R. para Declarar Valores Unicos,NE,NE,NE,SQL
+GROUP BY,Clausulas SQL,NE,NE,NE,SQL
+HAVING,Clausulas SQL,NE,NE,NE,SQL
+ORDER BY,Clausulas SQL,NE,NE,NE,SQL
+WHERE,Clausulas SQL,NE,NE,NE,SQL
+DISTINCT,Clausulas SQL,NE,NE,NE,SQL
+ASC,Sort values SQL,NE,NE,NE,SQL
+DESC,Sort values SQL,NE,NE,NE,SQL
+COUNT,Funciones de agregacion SQL,NE,NE,NE,SQL
+SUM,Funciones de agregacion SQL,NE,NE,NE,SQL
+AVG,Funciones de agregacion SQL,NE,NE,NE,SQL
+MAX,Funciones de agregacion SQL,NE,NE,NE,SQL
+MIN,Funciones de agregacion SQL,NE,NE,NE,SQL
+INNER,Join en SQL,NE,NE,NE,SQL
+LEFT,Join en SQL,NE,NE,NE,SQL
+RIGHT,Join en SQL,NE,NE,NE,SQL
+FULL,Join en SQL,NE,NE,NE,SQL
+UNION,Operacion de Conjuntos,NE,NE,NE,SQL
+UNIONALL,Operacion de Conjuntos,NE,NE,NE,SQL
+INTERSECT,Operacion de Conjuntos,NE,NE,NE,SQL
+MINUS,Operacion de Conjuntos,NE,NE,NE,SQL
+DECLARE,P.R. para declaracion de Variables,NE,NE,NE,SQL
+USE,P.R. para determinar el uso de obj,NE,NE,NE,SQL
+DATABASE,P.R. para Declarar base de datos,NE,NE,NE,SQL
+AS,P.R. para Definir Alias,NE,NE,NE,SQL
+BEGIN,P.R. para Definir Inicio de un bloque,NE,NE,NE,SQL
+END,P.R. para Definir Fin de un bloque,NE,NE,NE,SQL
+GO,P.R. para Indicar el fin de una instrucción,NE,NE,NE,SQL
+SET,P.R. para Indicar valores a actualizar,NE,NE,NE,SQL
+IF,Condicional,NE,NE,NE,SQL
+ELSE,Condicional,NE,NE,NE,SQL
+NOCOUNT,Clausulas SQL,NE,NE,NE,SQL
