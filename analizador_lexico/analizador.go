@@ -11,13 +11,14 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"strconv"
 	"strings"
 )
 
 // Definición de HashTable
 
 /*
-#tamHashTable: Representa el tamaño del arreglo utilizado como hashtable, el tamaño es representado por la cantidad de palabras reservadas en SQL * 2
+#tamHashTable: Representa el tamaño del arreglo utilizado como hashtable, el tamaño es representado por la cantidad de palabras reservadas en SQL * 2 (únicamente las que fueron abarcadas)
 */
 const tamHashTable = 150
 
@@ -139,16 +140,27 @@ func initializeHashTable() *hashtable {
 }
 
 var tablaSimbolos *hashtable = initializeHashTable()
+var bandera bool = false
+var posibleComentario string
+var numLinea int = 0
 
 func main() {
+	var nombreArchivo string
 	llenarTS()
-	fmt.Println(tablaSimbolos.searchInHashTable("INT"))
+	fmt.Println("Ingrese el nombre del archivo con su extensión")
+	fmt.Scanln(&nombreArchivo)
+	dataLimpia := AnalizarSQL(nombreArchivo, 1)
+	nombreArchivo = "dataLimpia_" + nombreArchivo
+	generarArchivos([]byte(dataLimpia), nombreArchivo)
 }
 
 //Funciones para analisis
 
 /*
 # def: Función que nos ayudará a cargar la tabla de símbolos en la primera carga del analizador
+# dataTS: array que nos sirve para acomodar la información de palabras propias de SQL que serán guardadas en la tabla de simbolos
+# nombreFile: Tiene seteado el nombre del archivo que contiene las palabras propias de SQL
+# path: Tiene seteada la ruta del archivo ue contiene las palabras propias de SQL
 */
 func llenarTS() {
 	var dataTS [1][6]string
@@ -171,6 +183,164 @@ func llenarTS() {
 	}
 }
 
+func AnalizarSQL(nombreSQL string, Op int) string {
+	numLinea = 0
+	var dataRetorno string
+	SQL, err := ioutil.ReadFile("../data_sources/" + nombreSQL)
+	if err == nil {
+		lineasSQL := Tokenizador(SQL, "\n")
+		for _, renglonSQL := range lineasSQL {
+			switch Op {
+			case 1:
+				if strings.TrimSpace(renglonSQL) != "" {
+					switch ExisteComentario(renglonSQL) {
+					case true:
+						if !bandera {
+							AnalizarComentario(renglonSQL, numLinea)
+							dataPrecomentario := extraerCodigo(renglonSQL)
+							if dataPrecomentario != "" {
+								dataRetorno = string(fmt.Appendln([]byte(dataRetorno), dataPrecomentario))
+							}
+						} else {
+							AnalizarComentario(renglonSQL, numLinea)
+						}
+						break
+					case false:
+						if !bandera {
+							dataRetorno = string(fmt.Appendln([]byte(dataRetorno), renglonSQL))
+						} else {
+							posibleComentario = string(fmt.Appendln([]byte(posibleComentario), renglonSQL))
+						}
+						break
+					}
+				}
+				break
+			case 2:
+				break
+			}
+			numLinea++
+		}
+	} else {
+		fmt.Println("El archivo " + nombreSQL + ", No se encontró o no se logró abrir")
+	}
+	return dataRetorno
+}
+
+func ExisteComentario(data string) bool {
+	return strings.ContainsAny(data, "-/*")
+}
+
+func AnalizarComentario(data string, num int) {
+	dataSQL := []byte(strings.TrimSpace(data))
+	comentarioSimple := strings.Contains(data, "--")
+	aperturaMulti := strings.Contains(data, "/*")
+	cierreMulti := strings.Contains(data, "*/")
+	potencialErr1 := strings.Contains(data, "-")
+	potencialErr2 := strings.Contains(data, "*")
+	potencialErr3 := strings.Contains(data, "/")
+
+	if !comentarioSimple {
+		if potencialErr1 {
+			fmt.Println("Error en la sintaxis de comentario, en la línea: " + strconv.Itoa(num+1))
+			bandera = false
+		} else {
+			if !aperturaMulti {
+				if !cierreMulti {
+					if potencialErr2 || potencialErr3 {
+						posibleComentario = ""
+						if VerificarPotencialError(dataSQL, num) {
+							if bandera == true {
+								posibleComentario = ""
+								bandera = false
+							} else {
+								bandera = true
+							}
+						} else {
+							if !bandera {
+								bandera = true
+							} else {
+								bandera = false
+							}
+						}
+					}
+				} else {
+					bandera = false
+				}
+			} else {
+				if cierreMulti {
+					posibleComentario = string(fmt.Appendln([]byte(posibleComentario), dataSQL))
+					bandera = false
+				} else {
+					bandera = true
+				}
+			}
+		}
+	} else {
+		posibleComentario = string(fmt.Appendln([]byte(posibleComentario), dataSQL))
+		bandera = false
+	}
+}
+
+func VerificarPotencialError(data []byte, num int) bool {
+	palabrasRenglon := Tokenizador(data, " ")
+	var resp bool
+	if len(palabrasRenglon) > 1 {
+		palabrasRenglon[0] = strings.ToUpper(palabrasRenglon[0])
+		palabrasRenglon[1] = strings.ToUpper(palabrasRenglon[1])
+		palabrasRenglon[2] = strings.ToUpper(palabrasRenglon[2])
+
+		if palabrasRenglon[0] == "SELECT" && (palabrasRenglon[1] == "*" || strings.Contains(palabrasRenglon[1], "COUNT") || strings.Contains(palabrasRenglon[1], "SUM") || strings.Contains(palabrasRenglon[1], "AVG")) && palabrasRenglon[2] == "FROM" {
+			if strings.Count(string(data), "*") <= 1 {
+				resp = false
+			}
+		}
+	}
+
+	if bandera && (palabrasRenglon[0] == "*" || palabrasRenglon[0] == "/") {
+		fmt.Println("Error en la sintaxis de comentario, en la línea: " + strconv.Itoa(num+1))
+		resp = false
+	} else {
+		if !bandera && (palabrasRenglon[0] == "*" || palabrasRenglon[0] == "/") {
+			fmt.Println("Error en la sintaxis de comentario, en la línea: " + strconv.Itoa(num+1))
+			resp = true
+		}
+	}
+	return resp
+}
+
+func extraerCodigo(data string) string {
+	var codigo string
+	index := strings.IndexAny(data, "-/")
+	letras := Tokenizador([]byte(data), "")
+	if index != -1 {
+		for i := 0; i < len(letras); i++ {
+			if i < index-1 {
+				if codigo != "" {
+					codigo += letras[i]
+				} else {
+					codigo = letras[i]
+				}
+			}
+		}
+	}
+	return codigo
+}
+
+/*
+# def: Función para separar la data según un delimitador que especificamos
+# return: Devuelve la data separada en un arreglo de strings
+# data (in): Información que le queremos aplicar el proceso descrito
+# delimitador (in): Caracter o caracteres por los que queremos separar la data
+*/
 func Tokenizador(data []byte, delimitador string) []string {
 	return strings.Split(string(data), delimitador)
+}
+
+func generarArchivos(data []byte, nombreFile string) {
+	if strings.Contains(nombreFile, "dataLimpia_") {
+		err := ioutil.WriteFile("../data_sources/"+nombreFile, data, 0644)
+		if err != nil {
+			fmt.Println("El archivo " + nombreFile + " no se pudo crear")
+		}
+	}
 }
