@@ -1,8 +1,12 @@
-CREATE PROCEDURE RegistrarMetodoPago
+CREATE PROCEDURE RegistrarMetodoPago -holaaaa
 
 
 
-@CodMetodoPago VARCHAR(7),
+@CodMetodoPago VARCHAR(7), 
+
+*
+ESTO ES UN ERROR
+*/
 
 
 @Descripcion VARCHAR(20),
