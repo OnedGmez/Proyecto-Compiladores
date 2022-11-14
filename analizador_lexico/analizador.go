@@ -492,7 +492,7 @@ func VerificarPotencialError(data []byte, num int) bool {
 		resp = false
 	} else {
 		if !bandera && (palabrasRenglon[0] == "*" || palabrasRenglon[0] == "/") {
-			fmt.Println("Error en la sintaxis de comentario, en la línea: " + strconv.Itoa(num+1))
+			llenarLog("Error en la sintaxis de comentario, en la línea: " + strconv.Itoa(num+1))
 			resp = true
 		}
 	}
@@ -528,8 +528,11 @@ func Tokenizador(data []byte, delimitador string) []string {
 }
 
 func generarArchivos(data []byte, nombreFile string) {
-	err := ioutil.WriteFile("../data_sources/"+nombreFile, data, 0644)
+	path := "../data_sources/"+nombreFile
+	err := ioutil.WriteFile(path, data, 0644)
 	if err != nil {
-		fmt.Println("El archivo " + nombreFile + " no se pudo crear")
+		llenarLog("El archivo " + nombreFile + " no se pudo crear")
+	}else{
+		llenarLog("El archivo " + nombreFile + " fue guardado en la ruta: " + path)
 	}
 }
