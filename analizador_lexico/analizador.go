@@ -11,8 +11,10 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"regexp"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 // Definición de HashTable
@@ -31,7 +33,7 @@ type bucket struct {
 }
 
 type bucketNode struct {
-	key  [1][6]string
+	key  [1][5]string
 	next *bucketNode
 }
 
@@ -45,12 +47,12 @@ func hash(key string) int {
 	return indice % tamHashTable
 }
 
-func (h *hashtable) insertInHashTable(key [1][6]string) {
+func (h *hashtable) insertInHashTable(key [1][5]string) {
 	index := hash(key[0][0])
 	h.array[index].insertBucketNode(key)
 }
 
-func (b *bucket) insertBucketNode(k [1][6]string) {
+func (b *bucket) insertBucketNode(k [1][5]string) {
 	keyNode := &bucketNode{key: k}
 	keyNode.next = b.head
 	b.head = keyNode
@@ -80,7 +82,7 @@ func (b *bucket) deleteBucketNode(k string) {
 			}
 		}
 	} else {
-		fmt.Println("Palabra no encontrada")
+		llenarLog("Key no encontrada")
 	}
 
 }
@@ -101,6 +103,23 @@ func (b *bucket) searchBucketNode(k string) bool {
 	return false
 }
 
+func (h *hashtable) searchTipoInHashTable(key string) string {
+	index := hash(key)
+	return h.array[index].searchTipoBucketNode(key)
+}
+
+func (b *bucket) searchTipoBucketNode(k string) string {
+	var retorno string
+	nodoActual := b.head
+	for nodoActual != nil {
+		if nodoActual.key[0][0] == k {
+			retorno = nodoActual.key[0][1]
+		}
+		nodoActual = nodoActual.next
+	}
+	return retorno
+}
+
 func (h *hashtable) modificarInHashTable(key string, linea string) {
 	index := hash(key)
 	h.array[index].modificarBucketNode(key, linea)
@@ -115,20 +134,54 @@ func (b *bucket) modificarBucketNode(key string, linea string) {
 				nodoAnterior = nodoModificar
 				nodoModificar = nodoModificar.next
 			} else {
-				nodoModificar.key[0][4] = nodoModificar.key[0][4] + "," + linea
+				if nodoModificar.key[0][3] != "NE" {
+					nodoModificar.key[0][2] = nodoModificar.key[0][3] + "," + linea
+				} else {
+					nodoModificar.key[0][3] = linea
+				}
 				if nodoAnterior != nil {
 					nodoAnterior.next = nodoModificar
 				} else {
 					nodoAnterior = nodoModificar
 				}
 				b.head = nodoAnterior
-				fmt.Println(nodoModificar)
 				break
 			}
 		}
 	} else {
-		fmt.Println("No se encontró la Key")
+		llenarLog("Key no encontrada")
 	}
+}
+
+func (h *hashtable) toString() {
+	resultado := &hashtable{}
+	var contenido string
+	for i := range resultado.array {
+		if h.array[i].mostrarContenido() != "" {
+			if contenido != "" {
+				contenido += "\n" + h.array[i].mostrarContenido()
+			} else {
+				contenido = h.array[i].mostrarContenido()
+			}
+		}
+	}
+	generarArchivos([]byte(contenido), "TS_actualizada.csv")
+}
+
+func (b *bucket) mostrarContenido() string {
+	var data string
+	current := b.head
+	if current != nil {
+		for current != nil {
+			if data != "" {
+				data += "\n\t" + current.key[0][0] + "," + current.key[0][1] + "," + current.key[0][2] + "," + current.key[0][3] + "," + current.key[0][4]
+			} else {
+				data = "\t" + current.key[0][0] + "," + current.key[0][1] + "," + current.key[0][2] + "," + current.key[0][3] + "," + current.key[0][4]
+			}
+			current = current.next
+		}
+	}
+	return data
 }
 
 func initializeHashTable() *hashtable {
@@ -143,24 +196,65 @@ var tablaSimbolos *hashtable = initializeHashTable()
 var bandera bool = false
 var posibleComentario string
 var numLinea int = 0
+var tokensLexemas string
+var nuevoElemento [1][5]string
+var log string
 
 func main() {
 	var nombreArchivo string
 	llenarTS()
-	fmt.Println("Analisis iniciado")
+	llenarLog("Analisis iniciado")
 	fmt.Println("Ingrese el nombre del archivo con su extensión")
 	fmt.Scanln(&nombreArchivo)
 	dataLimpia := AnalizarSQL(nombreArchivo, 1)
-	nombreArchivo = "dataLimpia_" + nombreArchivo
-	generarArchivos([]byte(dataLimpia), nombreArchivo)
-	fmt.Println("Abtención de Token, iniciada")
-	dataTokensLexemas := AnalizarSQL(nombreArchivo, 2)
-	nombreArchivo = strings.Replace(nombreArchivo, "dataLimpia_", "tokensLexemas_", 1)
-	nombreArchivo = strings.Replace(nombreArchivo, "sql", "txt", 1)
-	generarArchivos([]byte(dataTokensLexemas), nombreArchivo)
+	if dataLimpia != "" {
+		nombreArchivo = "dataLimpia_" + nombreArchivo
+		generarArchivos([]byte(dataLimpia), nombreArchivo)
+		llenarLog("Obtención de Token, iniciada")
+		dataTokensLexemas := AnalizarSQL(nombreArchivo, 2)
+		nombreArchivo = strings.Replace(nombreArchivo, "dataLimpia_", "tokensLexemas_", 1)
+		nombreArchivo = strings.Replace(nombreArchivo, "sql", "txt", 1)
+		dataTokensLexemas = tokenFormat(dataTokensLexemas)
+		generarArchivos([]byte(dataTokensLexemas), nombreArchivo)
+		tablaSimbolos.toString()
+		nombreArchivo = strings.Replace(nombreArchivo, "tokensLexemas_", "Logs_", 1)
+		llenarLog("Analisis finalizado")
+		generarArchivos([]byte(log), nombreArchivo)
+	} else {
+		llenarLog("Rectifica el nombre de tu archivo y vuelve a intentar")
+		nombreArchivo = strings.Replace(nombreArchivo, nombreArchivo, "Logs_.txt", 1)
+		llenarLog("Analisis finalizado")
+		generarArchivos([]byte(log), nombreArchivo)
+	}
 }
 
 //Funciones para analisis
+
+func llenarLog(data string) {
+	if log != "" {
+		log += "\n" + data
+	} else {
+		log = data
+	}
+}
+
+func tokenFormat(data string) string {
+	var retorno string = "\t" + "Token" + "\t\t\t\t\t\t" + "Valor"
+	if data != "" {
+		lineaToken := Tokenizador([]byte(data), "\n")
+		for _, linea := range lineaToken {
+			palabras := Tokenizador([]byte(linea), ", ")
+			if retorno != "" {
+				retorno += "\n\t" + palabras[0] + "\t\t\t\t\t\t" + palabras[1]
+			} else {
+				retorno = "\t" + palabras[0] + "\t\t\t\t\t\t" + palabras[1]
+			}
+		}
+	} else {
+		llenarLog("Data vacía, verifique sus archivos y vuelva a intentar")
+	}
+	return retorno
+}
 
 /*
 # def: Función que nos ayudará a cargar la tabla de símbolos en la primera carga del analizador
@@ -169,7 +263,7 @@ func main() {
 # path: Tiene seteada la ruta del archivo ue contiene las palabras propias de SQL
 */
 func llenarTS() {
-	var dataTS [1][6]string
+	var dataTS [1][5]string
 	var nombreFile string = "file_TS.csv"
 	var path string = "../data_sources/" + nombreFile
 	file, err := ioutil.ReadFile(path)
@@ -185,15 +279,20 @@ func llenarTS() {
 			tablaSimbolos.insertInHashTable(dataTS)
 		}
 	} else {
-		fmt.Println("Archivo " + nombreFile + ", no encontrado")
+		llenarLog("Archivo " + nombreFile + ", no encontrado")
 	}
 }
 
 func AnalizarSQL(nombreSQL string, Op int) string {
 	numLinea = 0
+	var identificador string
+	var nuevaDataTS [1][5]string
+	var runaLetra rune
 	var dataRetorno string
 	SQL, err := ioutil.ReadFile("../data_sources/" + nombreSQL)
-	if err == nil {
+	if err != nil {
+		llenarLog("El archivo " + nombreSQL + ", No se encontró o no se logró abrir")
+	} else {
 		lineasSQL := Tokenizador(SQL, "\n")
 		for _, renglonSQL := range lineasSQL {
 			switch Op {
@@ -215,21 +314,97 @@ func AnalizarSQL(nombreSQL string, Op int) string {
 						if !bandera {
 							dataRetorno = string(fmt.Appendln([]byte(dataRetorno), renglonSQL))
 						} else {
-							posibleComentario = string(fmt.Appendln([]byte(posibleComentario), renglonSQL))
+							llenarPosibleComentario(renglonSQL)
 						}
 						break
 					}
 				}
 				break
 			case 2:
+				reIdentificador := "^@.*$"
+				reReservada := "^[^@]\\D*$"
+				reIdentificadorND := "^[^@].*$"
+				palabrasLinea := Tokenizador([]byte(renglonSQL), " ")
+				for _, palabra := range palabrasLinea {
+					if strings.TrimSpace(palabra) != "" {
+						letras := Tokenizador([]byte(palabra), "")
+						for _, letra := range letras {
+							runaLetra = rune(letra[0])
+
+							if unicode.IsLetter(runaLetra) || unicode.IsNumber(runaLetra) || runaLetra == '_' || runaLetra == '@' {
+								if identificador != "" {
+									identificador += string(runaLetra)
+								} else {
+									identificador = string(runaLetra)
+								}
+							}
+						}
+						if identificador != "" {
+							coincide, _ := regexp.Match(reReservada, []byte(identificador))
+							if coincide {
+								if tablaSimbolos.searchInHashTable(strings.ToUpper(identificador)) {
+									tablaSimbolos.modificarInHashTable(strings.ToUpper(identificador), strconv.Itoa(numLinea))
+									tipo := tablaSimbolos.searchTipoInHashTable(strings.ToUpper(identificador))
+									insertarTokenLexema(strings.ToUpper(identificador), tipo)
+								}
+							} else {
+								coincide, _ := regexp.Match(reIdentificadorND, []byte(identificador))
+								if coincide {
+									if tablaSimbolos.searchInHashTable(identificador) {
+										tablaSimbolos.modificarInHashTable(identificador, strconv.Itoa(numLinea))
+										tipo := tablaSimbolos.searchTipoInHashTable(identificador)
+										insertarTokenLexema(strings.ToUpper(identificador), tipo)
+									} else {
+										insertarTokenLexema(identificador, "Identificador")
+										nuevaDataTS[0][0] = identificador
+										nuevaDataTS[0][1] = "Identificador"
+										nuevaDataTS[0][2] = strconv.Itoa(numLinea)
+										nuevaDataTS[0][3] = "NE"
+										nuevaDataTS[0][4] = "Usuario"
+										tablaSimbolos.insertInHashTable(nuevaDataTS)
+									}
+								} else {
+									coincide, _ := regexp.Match(reIdentificador, []byte(identificador))
+									if coincide {
+										if tablaSimbolos.searchInHashTable(identificador) {
+											tablaSimbolos.modificarInHashTable(identificador, strconv.Itoa(numLinea))
+											tipo := tablaSimbolos.searchTipoInHashTable(identificador)
+											insertarTokenLexema(strings.ToUpper(identificador), tipo)
+										} else {
+											insertarTokenLexema(identificador, "Declaración de variable")
+											nuevaDataTS[0][0] = identificador
+											nuevaDataTS[0][1] = "Declaración de variable"
+											nuevaDataTS[0][2] = strconv.Itoa(numLinea)
+											nuevaDataTS[0][3] = "NE"
+											nuevaDataTS[0][4] = "Usuario"
+											tablaSimbolos.insertInHashTable(nuevaDataTS)
+										}
+									}
+								}
+							}
+
+						}
+						identificador = ""
+					}
+
+				}
+				dataRetorno = tokensLexemas
 				break
 			}
 			numLinea++
 		}
-	} else {
-		fmt.Println("El archivo " + nombreSQL + ", No se encontró o no se logró abrir")
 	}
-	return dataRetorno
+	llenarLog("Se leyeron un total de: " + strconv.Itoa(numLinea) + " líneas de código")
+	return strings.TrimSpace(dataRetorno)
+}
+
+func insertarTokenLexema(data string, tipo string) string {
+	if tokensLexemas != "" {
+		tokensLexemas += "\n" + data + ", " + tipo
+	} else {
+		tokensLexemas = data + ", " + tipo
+	}
+	return tokensLexemas
 }
 
 func ExisteComentario(data string) bool {
@@ -247,7 +422,7 @@ func AnalizarComentario(data string, num int) {
 
 	if !comentarioSimple {
 		if potencialErr1 {
-			fmt.Println("Error en la sintaxis de comentario, en la línea: " + strconv.Itoa(num+1))
+			llenarLog("Error en la sintaxis de comentario, en la línea: " + strconv.Itoa(num+1))
 			bandera = false
 		} else {
 			if !aperturaMulti {
@@ -274,7 +449,7 @@ func AnalizarComentario(data string, num int) {
 				}
 			} else {
 				if cierreMulti {
-					posibleComentario = string(fmt.Appendln([]byte(posibleComentario), dataSQL))
+					llenarPosibleComentario(string(dataSQL))
 					bandera = false
 				} else {
 					bandera = true
@@ -282,8 +457,18 @@ func AnalizarComentario(data string, num int) {
 			}
 		}
 	} else {
-		posibleComentario = string(fmt.Appendln([]byte(posibleComentario), dataSQL))
+		llenarPosibleComentario(string(dataSQL))
 		bandera = false
+	}
+}
+
+func llenarPosibleComentario(data string) {
+	if data != "" {
+		if posibleComentario != "" {
+			posibleComentario += "\n" + data
+		} else {
+			posibleComentario = data
+		}
 	}
 }
 
@@ -303,7 +488,7 @@ func VerificarPotencialError(data []byte, num int) bool {
 	}
 
 	if bandera && (palabrasRenglon[0] == "*" || palabrasRenglon[0] == "/") {
-		fmt.Println("Error en la sintaxis de comentario, en la línea: " + strconv.Itoa(num+1))
+		llenarLog("Error en la sintaxis de comentario, en la línea: " + strconv.Itoa(num+1))
 		resp = false
 	} else {
 		if !bandera && (palabrasRenglon[0] == "*" || palabrasRenglon[0] == "/") {
@@ -343,10 +528,8 @@ func Tokenizador(data []byte, delimitador string) []string {
 }
 
 func generarArchivos(data []byte, nombreFile string) {
-	if strings.Contains(nombreFile, "dataLimpia_") {
-		err := ioutil.WriteFile("../data_sources/"+nombreFile, data, 0644)
-		if err != nil {
-			fmt.Println("El archivo " + nombreFile + " no se pudo crear")
-		}
+	err := ioutil.WriteFile("../data_sources/"+nombreFile, data, 0644)
+	if err != nil {
+		fmt.Println("El archivo " + nombreFile + " no se pudo crear")
 	}
 }
