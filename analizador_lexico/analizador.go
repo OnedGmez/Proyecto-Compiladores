@@ -197,8 +197,11 @@ var bandera bool = false
 var posibleComentario string
 var numLinea int = 0
 var tokensLexemas string
+var contTable int
 var nuevoElemento [1][5]string
 var log string
+var guardaTable string
+var banderaTable bool
 
 func main() {
 	var nombreArchivo string
@@ -300,8 +303,9 @@ func llenarTS() {
 return: Retornará información que se genera al final del analisis de las 2 opciones
 # nombreSQL (in): Parametro que contendrá el nombre del archivo que se desea analizador
 # Op (in): Parametro que contendrá la opción de analisis que deseamos
-	- 1: Opción que sirve para analizar el archivo, eliminar comentarios y espacios (hace un analisis rápido de comentarios para identificar errores)
-	- 2: Opción que servirá para hacer la extracción de token y añadir, modificar elementos a la tabla de símbolos
+  - 1: Opción que sirve para analizar el archivo, eliminar comentarios y espacios (hace un analisis rápido de comentarios para identificar errores)
+  - 2: Opción que servirá para hacer la extracción de token y añadir, modificar elementos a la tabla de símbolos
+
 # numLinea: La reiniciamos a cero con cada analisis que se realiza, para contar las líneas
 # identificador: Variable utilizada en la opción 2, para almacenar palabra por palabra los identificadores (palabra reservada, variable o identificador)
 # msj: Variable para almacenar las cadenas de literales
@@ -367,7 +371,7 @@ func AnalizarSQL(nombreSQL string, Op int) string {
 									}
 
 									if unicode.IsNumber(runaLetra) {
-										if !verificarAgregar(identificador) {
+										if !verificarAgregar(identificador, 1) {
 											if identificador != "" {
 												identificador += string(runaLetra)
 											} else {
@@ -467,11 +471,15 @@ func AnalizarSQL(nombreSQL string, Op int) string {
 # return: Devuelve true si la data existe ya en la tabla de símbolos y fue actualizado el espacio de donde fue usada
 # data (in): Parametro que almacena la data que vamos a verificar
 */
-func verificarAgregar(data string) bool {
-	if tablaSimbolos.searchInHashTable(strings.ToUpper(data)) {
-		tablaSimbolos.modificarInHashTable(strings.ToUpper(data), strconv.Itoa(numLinea+1))
-		tipo := tablaSimbolos.searchTipoInHashTable(strings.ToUpper(data))
-		insertarTokenLexema(strings.ToUpper(data), tipo, numLinea+1)
+func verificarAgregar(data string, op int) bool {
+	if op == 1 {
+		data = strings.ToUpper(data)
+	}
+
+	if tablaSimbolos.searchInHashTable(data) {
+		tablaSimbolos.modificarInHashTable(data, strconv.Itoa(numLinea+1))
+		tipo := tablaSimbolos.searchTipoInHashTable(data)
+		insertarTokenLexema(data, tipo, numLinea+1)
 		return true
 	}
 	return false
@@ -482,26 +490,64 @@ func verificarAgregar(data string) bool {
 # data (in): Recibe toda la línea del archivo para hacer las respectivas busquedas de errores
 */
 func analizarSimbolos(data string) {
-	parentesis := strings.ContainsAny(data, "()")
-	comillas := strings.Contains(data, "'")
-	if parentesis {
-		cAbiertos := strings.Count(data, "(")
-		cCerrados := strings.Count(data, ")")
-		if cCerrados != cAbiertos {
-			if cCerrados < cAbiertos {
-				llenarLog("ERROR:\tError en el cierre de parentesis, falta por cerrar: " + strconv.Itoa(cAbiertos-cCerrados) + " parentesis, en la línea: " + strconv.Itoa(numLinea+1))
-			} else {
-				llenarLog("ERROR:\tError en el cierre de parentesis, falta por aperturar: " + strconv.Itoa(cCerrados-cAbiertos) + " parentesis, en la línea: " + strconv.Itoa(numLinea+1))
+
+	if strings.Contains(data, "CREATE TABLE") {
+		guardaTable = data
+		if strings.Contains(data, "(") {
+			contTable++
+			banderaTable = true
+		} else {
+			llenarLog("ERROR:\tError en la apertura de parentesis, falta por aperturar parentesis, en la línea: " + strconv.Itoa(numLinea))
+			contTable = 0
+			banderaTable = false
+		}
+	} else {
+		if strings.Contains(data, "CREATE TABLE") || strings.Contains(data, "DROP") || strings.Contains(data, "ALTER") {
+			if banderaTable {
+				if strings.Contains(data, ")") {
+					contTable = 0
+					banderaTable = false
+				} else {
+					llenarLog("ERROR:\tError en el cierre de parentesis, falta por cerrar parentesis, en la línea: " + strconv.Itoa(numLinea))
+					banderaTable = false
+					contTable = 0
+				}
+			}
+		} else {
+			if strings.Contains(data, ")") {
+				contTable = 0
+				banderaTable = false
 			}
 		}
 	}
 
+	if guardaTable == "" {
+		parentesis := strings.ContainsAny(data, "()")
+		if parentesis {
+			cAbiertos := strings.Count(data, "(")
+			cCerrados := strings.Count(data, ")")
+			if cCerrados != cAbiertos {
+				if cCerrados < cAbiertos {
+					if contTable == 0 {
+						llenarLog("ERROR:\tError en la apertura de parentesis, falta por cerrar: " + strconv.Itoa(cAbiertos-cCerrados) + " parentesis, en la línea: " + strconv.Itoa(numLinea+1))
+					}
+				} else {
+					if contTable > 0 {
+						llenarLog("ERROR:\tError en el cierre de parentesis, falta por aperturar: " + strconv.Itoa(cCerrados-cAbiertos) + " parentesis, en la línea: " + strconv.Itoa(numLinea+1))
+					}
+				}
+			}
+		}
+	}
+
+	comillas := strings.Contains(data, "'")
 	if comillas {
 		cComillas := strings.Count(data, "'")
 		if cComillas%2 != 0 {
 			llenarLog("ERROR:\tError en la cadena de texto, faltan comillas ('), en la línea: " + strconv.Itoa(numLinea+1))
 		}
 	}
+	guardaTable = ""
 }
 
 /*
@@ -511,7 +557,7 @@ func analizarSimbolos(data string) {
 # reIdentificador: constante que contiene la expresión regular para validar una variable
 # reReservada: constante que contiene la expresión regular para validar una palabra reservada
 # reIdentificadorND: constante que contiene la expresión regular para validar un identificador
-# coincide: Variable que contiene la validación de si el identificador 
+# coincide: Variable que contiene la validación de si el identificador
 */
 func agregarIdentificadores(data string) {
 	var nuevaDataTS [1][5]string
@@ -521,7 +567,7 @@ func agregarIdentificadores(data string) {
 	if data != "" {
 		coincide, _ := regexp.Match(reReservada, []byte(data))
 		if coincide {
-			if !verificarAgregar(data) {
+			if !verificarAgregar(data, 1) {
 				insertarTokenLexema(data, "Identificador", numLinea+1)
 				nuevaDataTS[0][0] = data
 				nuevaDataTS[0][1] = "Identificador"
@@ -534,7 +580,7 @@ func agregarIdentificadores(data string) {
 			coincide, _ := regexp.Match(reIdentificadorND, []byte(data))
 			if coincide {
 				//fmt.Println("data: " + data)
-				if !verificarAgregar(data) {
+				if !verificarAgregar(data, 0) {
 					insertarTokenLexema(data, "Identificador", numLinea+1)
 					nuevaDataTS[0][0] = data
 					nuevaDataTS[0][1] = "Identificador"
@@ -547,7 +593,7 @@ func agregarIdentificadores(data string) {
 				coincide, _ := regexp.Match(reIdentificador, []byte(data))
 				if coincide {
 					//fmt.Println("Declaración: " + data)
-					if !verificarAgregar(data) {
+					if !verificarAgregar(data, 0) {
 						insertarTokenLexema(data, "Declaración de variable", numLinea+1)
 						nuevaDataTS[0][0] = data
 						nuevaDataTS[0][1] = "Declaración de variable"
@@ -564,7 +610,7 @@ func agregarIdentificadores(data string) {
 }
 
 /*
-# def: Función que nos ayuda a guardar un delimitador en la tabla de símbolos 
+# def: Función que nos ayuda a guardar un delimitador en la tabla de símbolos
 # reSimbolo: constante que contiene la expresión regular para validar un delimitador
 # coincide: Variable que contiene la validación de si el delimitador es enrealidad un símbolo
 */
@@ -573,7 +619,7 @@ func guardarDelimitador(delim string) {
 	coincide, _ := regexp.Match(reSimbolo, []byte(delim))
 	if coincide {
 		//fmt.Println("Declaración: " + identificador)
-		if !verificarAgregar(delim) {
+		if !verificarAgregar(delim, 0) {
 			llenarLog("WARNING:\tSimbolo: " + delim + ", en la línea: " + strconv.Itoa(numLinea+1) + ", no identificado dentro de la sintaxís definida para SQL")
 			insertarTokenLexema("[W]"+delim, "Delimitador/Separador", numLinea+1)
 		}
@@ -596,7 +642,7 @@ func insertarTokenLexema(data string, tipo string, num int) string {
 /*
 # def: Función que nos ayudará a identificar si la línea tiene comentarios o potenciales comentarios
 # return: Devuelve true si la linea contiene potenciales comentarios
-# data (in): Parametro para almacenar la línea que deseamos analizar 
+# data (in): Parametro para almacenar la línea que deseamos analizar
 */
 func ExisteComentario(data string) bool {
 	return strings.ContainsAny(data, "-/*")
