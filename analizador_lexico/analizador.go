@@ -203,14 +203,14 @@ var log string
 func main() {
 	var nombreArchivo string
 	llenarTS()
-	llenarLog("Analisis iniciado")
+	llenarLog("LOG:\tAnalisis iniciado")
 	fmt.Println("Ingrese el nombre del archivo con su extensión")
 	fmt.Scanln(&nombreArchivo)
 	dataLimpia := AnalizarSQL(nombreArchivo, 1)
 	if dataLimpia != "" {
 		nombreArchivo = "dataLimpia_" + nombreArchivo
 		generarArchivos([]byte(dataLimpia), nombreArchivo)
-		llenarLog("Obtención de Token, iniciada")
+		llenarLog("LOG:\tObtención de Token, iniciada")
 		dataTokensLexemas := AnalizarSQL(nombreArchivo, 2)
 		nombreArchivo = strings.Replace(nombreArchivo, "dataLimpia_", "tokensLexemas_", 1)
 		nombreArchivo = strings.Replace(nombreArchivo, "sql", "txt", 1)
@@ -218,12 +218,12 @@ func main() {
 		generarArchivos([]byte(dataTokensLexemas), nombreArchivo)
 		tablaSimbolos.toString()
 		nombreArchivo = strings.Replace(nombreArchivo, "tokensLexemas_", "Logs_", 1)
-		llenarLog("Analisis finalizado")
+		llenarLog("LOG:\tAnalisis finalizado")
 		generarArchivos([]byte(log), nombreArchivo)
 	} else {
-		llenarLog("Rectifica el nombre de tu archivo y vuelve a intentar")
+		llenarLog("ERROR:\tRectifica el nombre de tu archivo y vuelve a intentar")
 		nombreArchivo = strings.Replace(nombreArchivo, nombreArchivo, "Logs_.txt", 1)
-		llenarLog("Analisis finalizado")
+		llenarLog("LOG:\tAnalisis finalizado")
 		generarArchivos([]byte(log), nombreArchivo)
 	}
 }
@@ -239,19 +239,20 @@ func llenarLog(data string) {
 }
 
 func tokenFormat(data string) string {
-	var retorno string = "\t" + "Token" + "\t\t\t\t\t\t" + "Valor"
+	var retorno string = fmt.Sprintf("%-25s  %-25s %32s", "Token", "Valor", "Linea")
 	if data != "" {
 		lineaToken := Tokenizador([]byte(data), "\n")
 		for _, linea := range lineaToken {
 			palabras := Tokenizador([]byte(linea), ", ")
 			if retorno != "" {
-				retorno += "\n\t" + palabras[0] + "\t\t\t\t\t\t" + palabras[1]
+				retorno += fmt.Sprintf("\n%-25s  %-25s  %32s", palabras[0], palabras[1], palabras[2])
 			} else {
-				retorno = "\t" + palabras[0] + "\t\t\t\t\t\t" + palabras[1]
+				retorno = fmt.Sprintf("\n%-25s  %-25s  %32s", palabras[0], palabras[1], palabras[2])
+
 			}
 		}
 	} else {
-		llenarLog("Data vacía, verifique sus archivos y vuelva a intentar")
+		llenarLog("ERROR:\tData vacía, verifique sus archivos y vuelva a intentar")
 	}
 	return retorno
 }
@@ -263,6 +264,7 @@ func tokenFormat(data string) string {
 # path: Tiene seteada la ruta del archivo ue contiene las palabras propias de SQL
 */
 func llenarTS() {
+	var ix int = 0
 	var dataTS [1][5]string
 	var nombreFile string = "file_TS.csv"
 	var path string = "../data_sources/" + nombreFile
@@ -270,8 +272,8 @@ func llenarTS() {
 	if err == nil {
 		renglonData := Tokenizador([]byte(file), "\n")
 		for _, renglon := range renglonData {
-			ix := 0
-			palabrasRenglon := Tokenizador([]byte(renglon), ",")
+			ix = 0
+			palabrasRenglon := Tokenizador([]byte(renglon), ";")
 			for _, palabra := range palabrasRenglon {
 				dataTS[0][ix] = string(palabra)
 				ix++
@@ -279,19 +281,20 @@ func llenarTS() {
 			tablaSimbolos.insertInHashTable(dataTS)
 		}
 	} else {
-		llenarLog("Archivo " + nombreFile + ", no encontrado")
+		llenarLog("ERROR:\tEl archivo: " + nombreFile + ", no se encontró o no se pudo abrir")
 	}
 }
 
 func AnalizarSQL(nombreSQL string, Op int) string {
 	numLinea = 0
 	var identificador string
+	var delim string
 	var nuevaDataTS [1][5]string
 	var runaLetra rune
 	var dataRetorno string
 	SQL, err := ioutil.ReadFile("../data_sources/" + nombreSQL)
 	if err != nil {
-		llenarLog("El archivo " + nombreSQL + ", No se encontró o no se logró abrir")
+		llenarLog("ERROR:\tEl archivo: " + nombreSQL + ", no se encontró o no se pudo abrir")
 	} else {
 		lineasSQL := Tokenizador(SQL, "\n")
 		for _, renglonSQL := range lineasSQL {
@@ -301,17 +304,21 @@ func AnalizarSQL(nombreSQL string, Op int) string {
 					switch ExisteComentario(renglonSQL) {
 					case true:
 						if !bandera {
-							AnalizarComentario(renglonSQL, numLinea)
+							AnalizarComentario(renglonSQL, numLinea+1)
 							dataPrecomentario := extraerCodigo(renglonSQL)
 							if dataPrecomentario != "" {
 								dataRetorno = string(fmt.Appendln([]byte(dataRetorno), dataPrecomentario))
 							}
 						} else {
-							AnalizarComentario(renglonSQL, numLinea)
+							AnalizarComentario(renglonSQL, numLinea+1)
 						}
 						break
 					case false:
 						if !bandera {
+							if posibleComentario != "" {
+								dataRetorno = string(fmt.Appendln([]byte(dataRetorno), posibleComentario))
+								posibleComentario = ""
+							}
 							dataRetorno = string(fmt.Appendln([]byte(dataRetorno), renglonSQL))
 						} else {
 							llenarPosibleComentario(renglonSQL)
@@ -331,34 +338,56 @@ func AnalizarSQL(nombreSQL string, Op int) string {
 						for _, letra := range letras {
 							runaLetra = rune(letra[0])
 
-							if unicode.IsLetter(runaLetra) || unicode.IsNumber(runaLetra) || runaLetra == '_' || runaLetra == '@' {
+							if unicode.IsLetter(runaLetra) || (unicode.IsNumber(runaLetra) && identificador != "") || runaLetra == '_' || runaLetra == '@' {
+
 								if identificador != "" {
 									identificador += string(runaLetra)
 								} else {
 									identificador = string(runaLetra)
 								}
 							}
+
+							if (unicode.IsGraphic(runaLetra) && runaLetra != '_' && runaLetra != '@' && runaLetra != '.') || runaLetra == '*' || runaLetra == ',' {
+								if delim != "" {
+									delim += string(runaLetra)
+								} else {
+									guardarDelimitador(string(runaLetra))
+									delim = ""
+								}
+							}
+
 						}
+
 						if identificador != "" {
 							coincide, _ := regexp.Match(reReservada, []byte(identificador))
 							if coincide {
+								//fmt.Println("Reservada: " + identificador)
 								if tablaSimbolos.searchInHashTable(strings.ToUpper(identificador)) {
-									tablaSimbolos.modificarInHashTable(strings.ToUpper(identificador), strconv.Itoa(numLinea))
+									tablaSimbolos.modificarInHashTable(strings.ToUpper(identificador), strconv.Itoa(numLinea+1))
 									tipo := tablaSimbolos.searchTipoInHashTable(strings.ToUpper(identificador))
-									insertarTokenLexema(strings.ToUpper(identificador), tipo)
+									insertarTokenLexema(strings.ToUpper(identificador), tipo, numLinea+1)
+								} else {
+									insertarTokenLexema(identificador, "Identificador", numLinea+1)
+									nuevaDataTS[0][0] = identificador
+									nuevaDataTS[0][1] = "Identificador"
+									nuevaDataTS[0][2] = strconv.Itoa(numLinea + 1)
+									nuevaDataTS[0][3] = "NE"
+									nuevaDataTS[0][4] = "Usuario"
+									tablaSimbolos.insertInHashTable(nuevaDataTS)
 								}
 							} else {
 								coincide, _ := regexp.Match(reIdentificadorND, []byte(identificador))
 								if coincide {
+									//fmt.Println("Identificador: " + identificador)
 									if tablaSimbolos.searchInHashTable(identificador) {
-										tablaSimbolos.modificarInHashTable(identificador, strconv.Itoa(numLinea))
+										tablaSimbolos.modificarInHashTable(identificador, strconv.Itoa(numLinea+1))
 										tipo := tablaSimbolos.searchTipoInHashTable(identificador)
-										insertarTokenLexema(strings.ToUpper(identificador), tipo)
+										insertarTokenLexema(identificador, tipo, numLinea+1)
 									} else {
-										insertarTokenLexema(identificador, "Identificador")
+										insertarTokenLexema(identificador, "Identificador", numLinea+1)
 										nuevaDataTS[0][0] = identificador
 										nuevaDataTS[0][1] = "Identificador"
-										nuevaDataTS[0][2] = strconv.Itoa(numLinea)
+										nuevaDataTS[0][2] = strconv.Itoa(numLinea + 1)
 										nuevaDataTS[0][3] = "NE"
 										nuevaDataTS[0][4] = "Usuario"
 										tablaSimbolos.insertInHashTable(nuevaDataTS)
@@ -366,15 +395,16 @@ func AnalizarSQL(nombreSQL string, Op int) string {
 								} else {
 									coincide, _ := regexp.Match(reIdentificador, []byte(identificador))
 									if coincide {
+										//fmt.Println("Declaración: " + identificador)
 										if tablaSimbolos.searchInHashTable(identificador) {
-											tablaSimbolos.modificarInHashTable(identificador, strconv.Itoa(numLinea))
+											tablaSimbolos.modificarInHashTable(identificador, strconv.Itoa(numLinea+1))
 											tipo := tablaSimbolos.searchTipoInHashTable(identificador)
-											insertarTokenLexema(strings.ToUpper(identificador), tipo)
+											insertarTokenLexema(identificador, tipo, numLinea+1)
 										} else {
-											insertarTokenLexema(identificador, "Declaración de variable")
+											insertarTokenLexema(identificador, "Declaración de variable", numLinea+1)
 											nuevaDataTS[0][0] = identificador
 											nuevaDataTS[0][1] = "Declaración de variable"
-											nuevaDataTS[0][2] = strconv.Itoa(numLinea)
+											nuevaDataTS[0][2] = strconv.Itoa(numLinea + 1)
 											nuevaDataTS[0][3] = "NE"
 											nuevaDataTS[0][4] = "Usuario"
 											tablaSimbolos.insertInHashTable(nuevaDataTS)
@@ -394,15 +424,31 @@ func AnalizarSQL(nombreSQL string, Op int) string {
 			numLinea++
 		}
 	}
-	llenarLog("Se leyeron un total de: " + strconv.Itoa(numLinea) + " líneas de código")
+	llenarLog("LOG:\tSe leyeron un total de: " + strconv.Itoa(numLinea+1) + " líneas de código")
 	return strings.TrimSpace(dataRetorno)
 }
 
-func insertarTokenLexema(data string, tipo string) string {
+func guardarDelimitador(delim string) {
+	reSimbolo := "\\W"
+	coincide, _ := regexp.Match(reSimbolo, []byte(delim))
+	if coincide {
+		//fmt.Println("Declaración: " + identificador)
+		if tablaSimbolos.searchInHashTable(delim) {
+			tablaSimbolos.modificarInHashTable(delim, strconv.Itoa(numLinea+1))
+			tipo := tablaSimbolos.searchTipoInHashTable(delim)
+			insertarTokenLexema(delim, tipo, numLinea+1)
+		} else {
+			llenarLog("WARNING:\tSimbolo: " + delim + ", en la línea: " + strconv.Itoa(numLinea+1) + ", no identificado dentro de la sintaxís definida para SQL")
+			insertarTokenLexema("[W]"+delim, "Delimitador/Separador", numLinea+1)
+		}
+	}
+}
+
+func insertarTokenLexema(data string, tipo string, num int) string {
 	if tokensLexemas != "" {
-		tokensLexemas += "\n" + data + ", " + tipo
+		tokensLexemas += "\n" + data + ", " + tipo + ", " + strconv.Itoa(num)
 	} else {
-		tokensLexemas = data + ", " + tipo
+		tokensLexemas = data + ", " + tipo + ", " + strconv.Itoa(num)
 	}
 	return tokensLexemas
 }
@@ -422,13 +468,12 @@ func AnalizarComentario(data string, num int) {
 
 	if !comentarioSimple {
 		if potencialErr1 {
-			llenarLog("Error en la sintaxis de comentario, en la línea: " + strconv.Itoa(num+1))
+			llenarLog("ERROR:\tError en la sintaxis de comentario, en la línea: " + strconv.Itoa(num))
 			bandera = false
 		} else {
 			if !aperturaMulti {
 				if !cierreMulti {
 					if potencialErr2 || potencialErr3 {
-						posibleComentario = ""
 						if VerificarPotencialError(dataSQL, num) {
 							if bandera == true {
 								posibleComentario = ""
@@ -437,14 +482,11 @@ func AnalizarComentario(data string, num int) {
 								bandera = true
 							}
 						} else {
-							if !bandera {
-								bandera = true
-							} else {
-								bandera = false
-							}
+							llenarPosibleComentario(string(dataSQL))
 						}
 					}
 				} else {
+					posibleComentario = ""
 					bandera = false
 				}
 			} else {
@@ -488,11 +530,11 @@ func VerificarPotencialError(data []byte, num int) bool {
 	}
 
 	if bandera && (palabrasRenglon[0] == "*" || palabrasRenglon[0] == "/") {
-		llenarLog("Error en la sintaxis de comentario, en la línea: " + strconv.Itoa(num+1))
+		llenarLog("ERROR:\tError en la sintaxis de comentario, en la línea: " + strconv.Itoa(num))
 		resp = false
 	} else {
 		if !bandera && (palabrasRenglon[0] == "*" || palabrasRenglon[0] == "/") {
-			llenarLog("Error en la sintaxis de comentario, en la línea: " + strconv.Itoa(num+1))
+			llenarLog("ERROR:\tError en la sintaxis de comentario, en la línea: " + strconv.Itoa(num))
 			resp = true
 		}
 	}
@@ -528,11 +570,11 @@ func Tokenizador(data []byte, delimitador string) []string {
 }
 
 func generarArchivos(data []byte, nombreFile string) {
-	path := "../data_sources/"+nombreFile
+	path := "../data_sources/" + nombreFile
 	err := ioutil.WriteFile(path, data, 0644)
 	if err != nil {
-		llenarLog("El archivo " + nombreFile + " no se pudo crear")
-	}else{
-		llenarLog("El archivo " + nombreFile + " fue guardado en la ruta: " + path)
+		llenarLog("ERROR:\tEl archivo: " + nombreFile + " no se pudo crear")
+	} else {
+		llenarLog("LOG:\tEl archivo: " + nombreFile + " fue guardado en la ruta: " + path)
 	}
 }
