@@ -1,104 +1,106 @@
-Nombre,Tipo,Linea(declarada),Lineas(uso),Definida por
-BIGINT,V. Numerica exacta,NE,NE,SQL
-NUMERIC,V. Numerica exacta,NE,NE,SQL
-BIT,V. Numerica exacta,NE,NE,SQL
-SMALLINT,V. Numerica exacta,NE,NE,SQL
-DECIMAL,V. Numerica exacta,NE,NE,SQL
-SMALLMONEY,V. Numerica exacta,NE,NE,SQL
-INT,V. Numerica exacta,NE,NE,SQL
-TINYINT,V. Numerica exacta,NE,NE,SQL
-MONEY,V. Numerica exacta,NE,NE,SQL
-FLOAT,V. Numerica aproximada,NE,NE,SQL
-REAL,V. Numerica aproximada,NE,NE,SQL
-DATE,V. de Fecha y Hora,NE,NE,SQL
-DATETIMEOFFSET,V. de Fecha y Hora,NE,NE,SQL
-DATETIME2,V. de Fecha y Hora,NE,NE,SQL
-SMALLDATETIME,V. de Fecha y Hora,NE,NE,SQL
-DATETIME,V. de Fecha y Hora,NE,NE,SQL
-TIME,V. de Fecha y Hora,NE,NE,SQL
-CHAR,V. de Cadena de Caracteres,NE,NE,SQL
-VARCHAR,V. de Cadena de Caracteres,NE,NE,SQL
-TEXT,V. de Cadena de Caracteres,NE,NE,SQL
-NCHAR,V. de Cadena de Caracteres Unicode,NE,NE,SQL
-NVARCHAR,V. de Cadena de Caracteres Unicode,NE,NE,SQL
-NTEXT,V. de Cadena de Caracteres Unicode,NE,NE,SQL
-BINARY,V. de Cadena Binaria,NE,NE,SQL
-VARBINARY,V. de Cadena Binaria,NE,NE,SQL
-IMAGE,V. de Cadena Binaria,NE,NE,SQL
-CREATE,Comando de DDL,NE,NE,SQL
-ALTER,Comando de DDL,NE,NE,SQL
-DROP,Comando de DDL,NE,NE,SQL
-TRUNCATE,Comando de DDL,NE,NE,SQL
-INSERT,Comando de DML,NE,NE,SQL
-UPDATE,Comando de DML,NE,NE,SQL
-DELETE,Comando de DML,NE,NE,SQL
-GRANT,Comando de DCL,NE,NE,SQL
-REVOKE,Comando de DCL,NE,NE,SQL
-COMMIT,Comando de TCL,NE,NE,SQL
-ROLLBACK,Comando de TCL,NE,NE,SQL
-SAVEPOINT,Comando de TCL,NE,NE,SQL
-SELECT,Comando de DQL,NE,NE,SQL
-+,Operador Aritmetico,NE,NE,SQL
--,Operador Aritmetico,NE,NE,SQL
-*,Operador Aritmetico,NE,NE,SQL
-/,Operador Aritmetico,NE,NE,SQL
-%,Operador Aritmetico,NE,NE,SQL
-=,Operador de Comparacion,NE,NE,SQL
-!=,Operador de Comparacion,NE,NE,SQL
-<>,Operador de Comparacion,NE,NE,SQL
->,Operador de Comparacion,NE,NE,SQL
-<,Operador de Comparacion,NE,NE,SQL
->=,Operador de Comparacion,NE,NE,SQL
-<=,Operador de Comparacion,NE,NE,SQL
-!<,Operador de Comparacion,NE,NE,SQL
-!>,Operador de Comparacion,NE,NE,SQL
-ALL,Operador logico,NE,NE,SQL
-AND,Operador logico,NE,NE,SQL
-ANY,Operador logico,NE,NE,SQL
-BETWEEN,Operador logico,NE,NE,SQL
-IN,Operador logico,NE,NE,SQL
-NOT,Operador logico,NE,NE,SQL
-OR,Operador logico,NE,NE,SQL
-EXISTS,Operador logico,NE,NE,SQL
-LIKE,Operador logico,NE,NE,SQL
-TABLE,P.R. para Declarar Tablas,NE,NE,SQL
-VIEW,P.R. para Declarar Vistas,NE,NE,SQL
-INDEX,P.R. para Declarar Index,NE,NE,SQL
-PROCEDURE,P.R. para Declarar SP,NE,NE,SQL
-TRIGGER,P.R. para Declarar Disparadores,NE,NE,SQL
-UNIQUE,P.R. para Declarar Valores Unicos,NE,NE,SQL
-GROUP BY,Clausulas SQL,NE,NE,SQL
-HAVING,Clausulas SQL,NE,NE,SQL
-ORDER BY,Clausulas SQL,NE,NE,SQL
-WHERE,Clausulas SQL,NE,NE,SQL
-DISTINCT,Clausulas SQL,NE,NE,SQL
-ASC,Sort values SQL,NE,NE,SQL
-DESC,Sort values SQL,NE,NE,SQL
-COUNT,Funciones de agregacion SQL,NE,NE,SQL
-SUM,Funciones de agregacion SQL,NE,NE,SQL
-AVG,Funciones de agregacion SQL,NE,NE,SQL
-MAX,Funciones de agregacion SQL,NE,NE,SQL
-MIN,Funciones de agregacion SQL,NE,NE,SQL
-INNER,Join en SQL,NE,NE,SQL
-LEFT,Join en SQL,NE,NE,SQL
-RIGHT,Join en SQL,NE,NE,SQL
-FULL,Join en SQL,NE,NE,SQL
-UNION,Operacion de Conjuntos,NE,NE,SQL
-UNIONALL,Operacion de Conjuntos,NE,NE,SQL
-INTERSECT,Operacion de Conjuntos,NE,NE,SQL
-MINUS,Operacion de Conjuntos,NE,NE,SQL
-DECLARE,P.R. para declaracion de Variables,NE,NE,SQL
-USE,P.R. para determinar el uso de obj,NE,NE,SQL
-DATABASE,P.R. para Declarar base de datos,NE,NE,SQL
-AS,P.R. para Definir Alias,NE,NE,SQL
-BEGIN,P.R. para Definir Inicio de un bloque,NE,NE,SQL
-END,P.R. para Definir Fin de un bloque,NE,NE,SQL
-GO,P.R. para Indicar el fin de una instrucción,NE,NE,SQL
-SET,P.R. para Indicar valores a actualizar,NE,NE,SQL
-IF,Condicional,NE,NE,SQL
-ELSE,Condicional,NE,NE,SQL
-NOCOUNT,Clausulas SQL,NE,NE,SQL
-(,Delimitador,NE,NE,SQL
-),Delimitador,NE,NE,SQL
-INTO,Clausulas SQL,NE,NE,SQL
-*,Comodín,NE,NE,SQL
+Nombre;Tipo;Linea(declarada);Lineas(uso);Definida por
+BIGINT;V. Numerica exacta;NE;NE;SQL
+NUMERIC;V. Numerica exacta;NE;NE;SQL
+BIT;V. Numerica exacta;NE;NE;SQL
+SMALLINT;V. Numerica exacta;NE;NE;SQL
+DECIMAL;V. Numerica exacta;NE;NE;SQL
+SMALLMONEY;V. Numerica exacta;NE;NE;SQL
+INT;V. Numerica exacta;NE;NE;SQL
+TINYINT;V. Numerica exacta;NE;NE;SQL
+MONEY;V. Numerica exacta;NE;NE;SQL
+FLOAT;V. Numerica aproximada;NE;NE;SQL
+REAL;V. Numerica aproximada;NE;NE;SQL
+DATE;V. de Fecha y Hora;NE;NE;SQL
+DATETIMEOFFSET;V. de Fecha y Hora;NE;NE;SQL
+DATETIME2;V. de Fecha y Hora;NE;NE;SQL
+SMALLDATETIME;V. de Fecha y Hora;NE;NE;SQL
+DATETIME;V. de Fecha y Hora;NE;NE;SQL
+TIME;V. de Fecha y Hora;NE;NE;SQL
+CHAR;V. de Cadena de Caracteres;NE;NE;SQL
+VARCHAR;V. de Cadena de Caracteres;NE;NE;SQL
+TEXT;V. de Cadena de Caracteres;NE;NE;SQL
+NCHAR;V. de Cadena de Caracteres Unicode;NE;NE;SQL
+NVARCHAR;V. de Cadena de Caracteres Unicode;NE;NE;SQL
+NTEXT;V. de Cadena de Caracteres Unicode;NE;NE;SQL
+BINARY;V. de Cadena Binaria;NE;NE;SQL
+VARBINARY;V. de Cadena Binaria;NE;NE;SQL
+IMAGE;V. de Cadena Binaria;NE;NE;SQL
+CREATE;Comando de DDL;NE;NE;SQL
+ALTER;Comando de DDL;NE;NE;SQL
+DROP;Comando de DDL;NE;NE;SQL
+TRUNCATE;Comando de DDL;NE;NE;SQL
+INSERT;Comando de DML;NE;NE;SQL
+UPDATE;Comando de DML;NE;NE;SQL
+DELETE;Comando de DML;NE;NE;SQL
+GRANT;Comando de DCL;NE;NE;SQL
+REVOKE;Comando de DCL;NE;NE;SQL
+COMMIT;Comando de TCL;NE;NE;SQL
+ROLLBACK;Comando de TCL;NE;NE;SQL
+SAVEPOINT;Comando de TCL;NE;NE;SQL
+SELECT;Comando de DQL;NE;NE;SQL
++;Operador Aritmetico;NE;NE;SQL
+-;Operador Aritmetico;NE;NE;SQL
+*;Operador Aritmetico/comodin;NE;NE;SQL
+/;Operador Aritmetico;NE;NE;SQL
+%;Operador Aritmetico;NE;NE;SQL
+=;Operador de Comparacion;NE;NE;SQL
+!=;Operador de Comparacion;NE;NE;SQL
+<>;Operador de Comparacion;NE;NE;SQL
+>;Operador de Comparacion;NE;NE;SQL
+<;Operador de Comparacion;NE;NE;SQL
+>=;Operador de Comparacion;NE;NE;SQL
+<=;Operador de Comparacion;NE;NE;SQL
+!<;Operador de Comparacion;NE;NE;SQL
+!>;Operador de Comparacion;NE;NE;SQL
+ALL;Operador logico;NE;NE;SQL
+AND;Operador logico;NE;NE;SQL
+ANY;Operador logico;NE;NE;SQL
+BETWEEN;Operador logico;NE;NE;SQL
+IN;Operador logico;NE;NE;SQL
+NOT;Operador logico;NE;NE;SQL
+OR;Operador logico;NE;NE;SQL
+EXISTS;Operador logico;NE;NE;SQL
+LIKE;Operador logico;NE;NE;SQL
+TABLE;P.R. para Declarar Tablas;NE;NE;SQL
+VIEW;P.R. para Declarar Vistas;NE;NE;SQL
+INDEX;P.R. para Declarar Index;NE;NE;SQL
+PROCEDURE;P.R. para Declarar SP;NE;NE;SQL
+TRIGGER;P.R. para Declarar Disparadores;NE;NE;SQL
+UNIQUE;P.R. para Declarar Valores Unicos;NE;NE;SQL
+GROUP BY;Clausulas SQL;NE;NE;SQL
+HAVING;Clausulas SQL;NE;NE;SQL
+ORDER BY;Clausulas SQL;NE;NE;SQL
+WHERE;Clausulas SQL;NE;NE;SQL
+DISTINCT;Clausulas SQL;NE;NE;SQL
+ASC;Sort values SQL;NE;NE;SQL
+DESC;Sort values SQL;NE;NE;SQL
+COUNT;Funciones de agregacion SQL;NE;NE;SQL
+SUM;Funciones de agregacion SQL;NE;NE;SQL
+AVG;Funciones de agregacion SQL;NE;NE;SQL
+MAX;Funciones de agregacion SQL;NE;NE;SQL
+MIN;Funciones de agregacion SQL;NE;NE;SQL
+INNER;Join en SQL;NE;NE;SQL
+LEFT;Join en SQL;NE;NE;SQL
+RIGHT;Join en SQL;NE;NE;SQL
+FULL;Join en SQL;NE;NE;SQL
+UNION;Operacion de Conjuntos;NE;NE;SQL
+UNIONALL;Operacion de Conjuntos;NE;NE;SQL
+INTERSECT;Operacion de Conjuntos;NE;NE;SQL
+MINUS;Operacion de Conjuntos;NE;NE;SQL
+DECLARE;P.R. para declaracion de Variables;NE;NE;SQL
+USE;P.R. para determinar el uso de obj;NE;NE;SQL
+DATABASE;P.R. para Declarar base de datos;NE;NE;SQL
+AS;P.R. para Definir Alias;NE;NE;SQL
+BEGIN;P.R. para Definir Inicio de un bloque;NE;NE;SQL
+END;P.R. para Definir Fin de un bloque;NE;NE;SQL
+GO;P.R. para Indicar el fin de una instrucciï¿½n;NE;NE;SQL
+SET;P.R. para Indicar valores a actualizar;NE;NE;SQL
+IF;Condicional;NE;NE;SQL
+ELSE;Condicional;NE;NE;SQL
+NOCOUNT;Clausulas SQL;NE;NE;SQL
+(;Delimitador;NE;NE;SQL
+,;Separador;NE;NE;SQL
+);Delimitador;NE;NE;SQL
+INTO;Clausulas SQL;NE;NE;SQL
+VALUES;Clausulas SQL;NE;NE;SQL
+FROM;Clausulas SQL;NE;NE;SQL
