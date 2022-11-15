@@ -230,6 +230,10 @@ func main() {
 
 //Funciones para analisis
 
+/*
+# def: Función que nos actualiza la información de la variable que va almacenando los logs
+# data (in): Parametro que contiene la información que se irá guardando en la variable de los Logs
+*/
 func llenarLog(data string) {
 	if log != "" {
 		log += "\n" + data
@@ -238,6 +242,11 @@ func llenarLog(data string) {
 	}
 }
 
+/*
+# def: Función que sirve únicamente para darle formato para que se vean más ordenados los tokens almacenados
+# return: Devuelve un string con la data formateada
+# data (in): Parametro que contiene los tokens a los que se les dará formato
+*/
 func tokenFormat(data string) string {
 	var retorno string = fmt.Sprintf("%-25s  %-25s %32s", "Token", "Valor", "Linea")
 	if data != "" {
@@ -252,7 +261,7 @@ func tokenFormat(data string) string {
 			}
 		}
 	} else {
-		llenarLog("ERROR:\tData vacía, verifique sus archivos y vuelva a intentar")
+		llenarLog("ERROR:\tTokens vacíos, verifique sus archivos y vuelva a intentar")
 	}
 	return retorno
 }
@@ -262,6 +271,7 @@ func tokenFormat(data string) string {
 # dataTS: array que nos sirve para acomodar la información de palabras propias de SQL que serán guardadas en la tabla de simbolos
 # nombreFile: Tiene seteado el nombre del archivo que contiene las palabras propias de SQL
 # path: Tiene seteada la ruta del archivo ue contiene las palabras propias de SQL
+# ix: Variable de conteo para asignar el orden correctamente de los valores la Tabla de Símbolos
 */
 func llenarTS() {
 	var ix int = 0
@@ -285,11 +295,25 @@ func llenarTS() {
 	}
 }
 
+/*
+# def: Función que sirve para hacer los analisis según se requiera a los archivos SQL
+return: Retornará información que se genera al final del analisis de las 2 opciones
+# nombreSQL (in): Parametro que contendrá el nombre del archivo que se desea analizador
+# Op (in): Parametro que contendrá la opción de analisis que deseamos
+	- 1: Opción que sirve para analizar el archivo, eliminar comentarios y espacios (hace un analisis rápido de comentarios para identificar errores)
+	- 2: Opción que servirá para hacer la extracción de token y añadir, modificar elementos a la tabla de símbolos
+# numLinea: La reiniciamos a cero con cada analisis que se realiza, para contar las líneas
+# identificador: Variable utilizada en la opción 2, para almacenar palabra por palabra los identificadores (palabra reservada, variable o identificador)
+# msj: Variable para almacenar las cadenas de literales
+# delim: Variable que almacenará los delimitadores en el código
+# dataRetorno: Almacenará la información que se va generando ya sea de la opción 1 o 2
+# runaLetra: Variable para convertir las letras en caracteres
+*/
 func AnalizarSQL(nombreSQL string, Op int) string {
 	numLinea = 0
 	var identificador string
 	var delim string
-	var nuevaDataTS [1][5]string
+	var msj string
 	var runaLetra rune
 	var dataRetorno string
 	SQL, err := ioutil.ReadFile("../data_sources/" + nombreSQL)
@@ -301,6 +325,7 @@ func AnalizarSQL(nombreSQL string, Op int) string {
 			switch Op {
 			case 1:
 				if strings.TrimSpace(renglonSQL) != "" {
+					analizarSimbolos(renglonSQL)
 					switch ExisteComentario(renglonSQL) {
 					case true:
 						if !bandera {
@@ -328,95 +353,104 @@ func AnalizarSQL(nombreSQL string, Op int) string {
 				}
 				break
 			case 2:
-				reIdentificador := "^@.*$"
-				reReservada := "^[^@]\\D*$"
-				reIdentificadorND := "^[^@].*$"
 				palabrasLinea := Tokenizador([]byte(renglonSQL), " ")
 				for _, palabra := range palabrasLinea {
 					if strings.TrimSpace(palabra) != "" {
 						letras := Tokenizador([]byte(palabra), "")
 						for _, letra := range letras {
 							runaLetra = rune(letra[0])
-
 							if unicode.IsLetter(runaLetra) || (unicode.IsNumber(runaLetra) && identificador != "") || runaLetra == '_' || runaLetra == '@' {
+								if !bandera {
+									if runaLetra == '@' && identificador != "" {
+										agregarIdentificadores(identificador)
+										identificador = ""
+									}
 
-								if identificador != "" {
-									identificador += string(runaLetra)
+									if unicode.IsNumber(runaLetra) {
+										if !verificarAgregar(identificador) {
+											if identificador != "" {
+												identificador += string(runaLetra)
+											} else {
+												identificador = string(runaLetra)
+											}
+										} else {
+											identificador = ""
+										}
+									} else {
+										if identificador != "" {
+											identificador += string(runaLetra)
+										} else {
+											identificador = string(runaLetra)
+										}
+									}
 								} else {
-									identificador = string(runaLetra)
+									if msj != "" {
+										msj += string(runaLetra)
+									} else {
+										msj = string(runaLetra)
+									}
 								}
 							}
 
-							if (unicode.IsGraphic(runaLetra) && runaLetra != '_' && runaLetra != '@' && runaLetra != '.') || runaLetra == '*' || runaLetra == ',' {
-								if delim != "" {
-									delim += string(runaLetra)
+							if (unicode.IsGraphic(runaLetra) && !unicode.IsLetter(runaLetra) && !unicode.IsNumber(runaLetra)) && runaLetra != '_' && runaLetra != '@' && runaLetra != '.' {
+								if runaLetra != '\'' {
+									if identificador != "" {
+										agregarIdentificadores(identificador)
+										identificador = ""
+									}
+
+									if (delim == "") && (runaLetra == '<' || runaLetra == '!' || runaLetra == '>') {
+										delim = string(runaLetra)
+									} else {
+										if (delim == "<" || delim == "!" || delim == ">") && (runaLetra == '=' || runaLetra == '>' || runaLetra == '<') {
+											delim += string(runaLetra)
+											guardarDelimitador(delim)
+											delim = ""
+										} else {
+											guardarDelimitador(string(runaLetra))
+											delim = ""
+										}
+									}
+
 								} else {
-									guardarDelimitador(string(runaLetra))
-									delim = ""
+									if !bandera {
+										if msj != "" {
+											msj += string(runaLetra)
+										} else {
+											msj = string(runaLetra)
+											bandera = true
+										}
+									} else {
+										msj += string(runaLetra)
+										insertarTokenLexema(msj, "Cadena de Literales", numLinea+1)
+										msj = ""
+										bandera = false
+									}
 								}
+
 							}
 
 						}
 
 						if identificador != "" {
-							coincide, _ := regexp.Match(reReservada, []byte(identificador))
-							if coincide {
-								//fmt.Println("Reservada: " + identificador)
-								if tablaSimbolos.searchInHashTable(strings.ToUpper(identificador)) {
-									tablaSimbolos.modificarInHashTable(strings.ToUpper(identificador), strconv.Itoa(numLinea+1))
-									tipo := tablaSimbolos.searchTipoInHashTable(strings.ToUpper(identificador))
-									insertarTokenLexema(strings.ToUpper(identificador), tipo, numLinea+1)
-								} else {
-									insertarTokenLexema(identificador, "Identificador", numLinea+1)
-									nuevaDataTS[0][0] = identificador
-									nuevaDataTS[0][1] = "Identificador"
-									nuevaDataTS[0][2] = strconv.Itoa(numLinea + 1)
-									nuevaDataTS[0][3] = "NE"
-									nuevaDataTS[0][4] = "Usuario"
-									tablaSimbolos.insertInHashTable(nuevaDataTS)
-								}
-							} else {
-								coincide, _ := regexp.Match(reIdentificadorND, []byte(identificador))
-								if coincide {
-									//fmt.Println("Identificador: " + identificador)
-									if tablaSimbolos.searchInHashTable(identificador) {
-										tablaSimbolos.modificarInHashTable(identificador, strconv.Itoa(numLinea+1))
-										tipo := tablaSimbolos.searchTipoInHashTable(identificador)
-										insertarTokenLexema(identificador, tipo, numLinea+1)
-									} else {
-										insertarTokenLexema(identificador, "Identificador", numLinea+1)
-										nuevaDataTS[0][0] = identificador
-										nuevaDataTS[0][1] = "Identificador"
-										nuevaDataTS[0][2] = strconv.Itoa(numLinea + 1)
-										nuevaDataTS[0][3] = "NE"
-										nuevaDataTS[0][4] = "Usuario"
-										tablaSimbolos.insertInHashTable(nuevaDataTS)
-									}
-								} else {
-									coincide, _ := regexp.Match(reIdentificador, []byte(identificador))
-									if coincide {
-										//fmt.Println("Declaración: " + identificador)
-										if tablaSimbolos.searchInHashTable(identificador) {
-											tablaSimbolos.modificarInHashTable(identificador, strconv.Itoa(numLinea+1))
-											tipo := tablaSimbolos.searchTipoInHashTable(identificador)
-											insertarTokenLexema(identificador, tipo, numLinea+1)
-										} else {
-											insertarTokenLexema(identificador, "Declaración de variable", numLinea+1)
-											nuevaDataTS[0][0] = identificador
-											nuevaDataTS[0][1] = "Declaración de variable"
-											nuevaDataTS[0][2] = strconv.Itoa(numLinea + 1)
-											nuevaDataTS[0][3] = "NE"
-											nuevaDataTS[0][4] = "Usuario"
-											tablaSimbolos.insertInHashTable(nuevaDataTS)
-										}
-									}
-								}
-							}
-
+							agregarIdentificadores(identificador)
+							identificador = ""
 						}
-						identificador = ""
+
+						if delim != "" {
+							guardarDelimitador(delim)
+							delim = ""
+						}
 					}
 
+					if bandera {
+						msj += " "
+					}
+				}
+				if bandera {
+					insertarTokenLexema(strings.TrimSpace(msj), "Cadena de Literales", numLinea+1)
+					msj = ""
+					bandera = false
 				}
 				dataRetorno = tokensLexemas
 				break
@@ -428,22 +462,128 @@ func AnalizarSQL(nombreSQL string, Op int) string {
 	return strings.TrimSpace(dataRetorno)
 }
 
+/*
+# def: Función que sirve para confirmar si un delimitador, identificador existe en la tabla de símbolos
+# return: Devuelve true si la data existe ya en la tabla de símbolos y fue actualizado el espacio de donde fue usada
+# data (in): Parametro que almacena la data que vamos a verificar
+*/
+func verificarAgregar(data string) bool {
+	if tablaSimbolos.searchInHashTable(strings.ToUpper(data)) {
+		tablaSimbolos.modificarInHashTable(strings.ToUpper(data), strconv.Itoa(numLinea+1))
+		tipo := tablaSimbolos.searchTipoInHashTable(strings.ToUpper(data))
+		insertarTokenLexema(strings.ToUpper(data), tipo, numLinea+1)
+		return true
+	}
+	return false
+}
+
+/*
+# def: Función que nos ayudará para identificar errores en parentesis y en '
+# data (in): Recibe toda la línea del archivo para hacer las respectivas busquedas de errores
+*/
+func analizarSimbolos(data string) {
+	parentesis := strings.ContainsAny(data, "()")
+	comillas := strings.Contains(data, "'")
+	if parentesis {
+		cAbiertos := strings.Count(data, "(")
+		cCerrados := strings.Count(data, ")")
+		if cCerrados != cAbiertos {
+			if cCerrados < cAbiertos {
+				llenarLog("ERROR:\tError en el cierre de parentesis, falta por cerrar: " + strconv.Itoa(cAbiertos-cCerrados) + " parentesis, en la línea: " + strconv.Itoa(numLinea+1))
+			} else {
+				llenarLog("ERROR:\tError en el cierre de parentesis, falta por aperturar: " + strconv.Itoa(cCerrados-cAbiertos) + " parentesis, en la línea: " + strconv.Itoa(numLinea+1))
+			}
+		}
+	}
+
+	if comillas {
+		cComillas := strings.Count(data, "'")
+		if cComillas%2 != 0 {
+			llenarLog("ERROR:\tError en la cadena de texto, faltan comillas ('), en la línea: " + strconv.Itoa(numLinea+1))
+		}
+	}
+}
+
+/*
+# def: Función para agregar a la tabla de símbolos los identificadores que se encuentren en el código
+# data (in): Parametro que contendrá el identificador
+# nuevaDataTS: array que sirve para ordenar la data que será guardada en la tabla de símbolos (cuando se requiera)
+# reIdentificador: constante que contiene la expresión regular para validar una variable
+# reReservada: constante que contiene la expresión regular para validar una palabra reservada
+# reIdentificadorND: constante que contiene la expresión regular para validar un identificador
+# coincide: Variable que contiene la validación de si el identificador 
+*/
+func agregarIdentificadores(data string) {
+	var nuevaDataTS [1][5]string
+	reIdentificador := "^@.*$"
+	reReservada := "^[^@]\\D*$"
+	reIdentificadorND := "^[^@].*$"
+	if data != "" {
+		coincide, _ := regexp.Match(reReservada, []byte(data))
+		if coincide {
+			if !verificarAgregar(data) {
+				insertarTokenLexema(data, "Identificador", numLinea+1)
+				nuevaDataTS[0][0] = data
+				nuevaDataTS[0][1] = "Identificador"
+				nuevaDataTS[0][2] = strconv.Itoa(numLinea + 1)
+				nuevaDataTS[0][3] = "NE"
+				nuevaDataTS[0][4] = "Usuario"
+				tablaSimbolos.insertInHashTable(nuevaDataTS)
+			}
+		} else {
+			coincide, _ := regexp.Match(reIdentificadorND, []byte(data))
+			if coincide {
+				//fmt.Println("data: " + data)
+				if !verificarAgregar(data) {
+					insertarTokenLexema(data, "Identificador", numLinea+1)
+					nuevaDataTS[0][0] = data
+					nuevaDataTS[0][1] = "Identificador"
+					nuevaDataTS[0][2] = strconv.Itoa(numLinea + 1)
+					nuevaDataTS[0][3] = "NE"
+					nuevaDataTS[0][4] = "Usuario"
+					tablaSimbolos.insertInHashTable(nuevaDataTS)
+				}
+			} else {
+				coincide, _ := regexp.Match(reIdentificador, []byte(data))
+				if coincide {
+					//fmt.Println("Declaración: " + data)
+					if !verificarAgregar(data) {
+						insertarTokenLexema(data, "Declaración de variable", numLinea+1)
+						nuevaDataTS[0][0] = data
+						nuevaDataTS[0][1] = "Declaración de variable"
+						nuevaDataTS[0][2] = strconv.Itoa(numLinea + 1)
+						nuevaDataTS[0][3] = "NE"
+						nuevaDataTS[0][4] = "Usuario"
+						tablaSimbolos.insertInHashTable(nuevaDataTS)
+					}
+				}
+			}
+		}
+
+	}
+}
+
+/*
+# def: Función que nos ayuda a guardar un delimitador en la tabla de símbolos 
+# reSimbolo: constante que contiene la expresión regular para validar un delimitador
+# coincide: Variable que contiene la validación de si el delimitador es enrealidad un símbolo
+*/
 func guardarDelimitador(delim string) {
 	reSimbolo := "\\W"
 	coincide, _ := regexp.Match(reSimbolo, []byte(delim))
 	if coincide {
 		//fmt.Println("Declaración: " + identificador)
-		if tablaSimbolos.searchInHashTable(delim) {
-			tablaSimbolos.modificarInHashTable(delim, strconv.Itoa(numLinea+1))
-			tipo := tablaSimbolos.searchTipoInHashTable(delim)
-			insertarTokenLexema(delim, tipo, numLinea+1)
-		} else {
+		if !verificarAgregar(delim) {
 			llenarLog("WARNING:\tSimbolo: " + delim + ", en la línea: " + strconv.Itoa(numLinea+1) + ", no identificado dentro de la sintaxís definida para SQL")
 			insertarTokenLexema("[W]"+delim, "Delimitador/Separador", numLinea+1)
 		}
 	}
 }
 
+/*
+# def: Función para llenar la variable que contendrá los tokens
+# return: devuelve los tokens que se han agregado
+*/
 func insertarTokenLexema(data string, tipo string, num int) string {
 	if tokensLexemas != "" {
 		tokensLexemas += "\n" + data + ", " + tipo + ", " + strconv.Itoa(num)
@@ -453,10 +593,27 @@ func insertarTokenLexema(data string, tipo string, num int) string {
 	return tokensLexemas
 }
 
+/*
+# def: Función que nos ayudará a identificar si la línea tiene comentarios o potenciales comentarios
+# return: Devuelve true si la linea contiene potenciales comentarios
+# data (in): Parametro para almacenar la línea que deseamos analizar 
+*/
 func ExisteComentario(data string) bool {
 	return strings.ContainsAny(data, "-/*")
 }
 
+/*
+# def: Función para analizar una línea que se ha identificado como potencial comentario
+# data (in): Parametro que almacena la línea que parece potencial comentario
+# num (in): Parametro que almacema el número de línea donde se identificó el posible comentario
+# dataSQL: Quitá los espacios al inicio y fin de la línea
+# comentarioSimple: Variable booleana que contendrá true si la linea contiene los simbolos de un comentario simple
+# aperturaMulti: Variable booleana que contendrá true si la linea contiene los simbolos de una apertura de comentario multiple
+# cierreMulti: Variable booleana que contendrá true si la linea contiene los simbolos de una cierre de comentario multiple
+# potencialErr1: Variable booleana que contendrá true si la linea contiene los simbolos de un potencial error
+# potencialErr2: Variable booleana que contendrá true si la linea contiene los simbolos de un potencial error
+# potencialErr3: Variable booleana que contendrá true si la linea contiene los simbolos de un potencial error
+*/
 func AnalizarComentario(data string, num int) {
 	dataSQL := []byte(strings.TrimSpace(data))
 	comentarioSimple := strings.Contains(data, "--")
@@ -504,6 +661,10 @@ func AnalizarComentario(data string, num int) {
 	}
 }
 
+/*
+# def: Función que sirve para llenar la variable que contendrá todo el código que se consideraría parte del comentario
+# data (in): Contiene la información que se considera parte del comentario
+*/
 func llenarPosibleComentario(data string) {
 	if data != "" {
 		if posibleComentario != "" {
@@ -514,6 +675,12 @@ func llenarPosibleComentario(data string) {
 	}
 }
 
+/*
+# def: Función que servirá para verificar los potenciales errores 2 y 3, para evitar que un SELECT * se considere error de comentario
+# data (in): Contiene los bytes del texto que se envia para analizar
+# num (in): Contiene el número de línea al que pertenece la línea
+# palabrasRenglon: Contiene las palabras de la línea tokenizada
+*/
 func VerificarPotencialError(data []byte, num int) bool {
 	palabrasRenglon := Tokenizador(data, " ")
 	var resp bool
@@ -541,6 +708,12 @@ func VerificarPotencialError(data []byte, num int) bool {
 	return resp
 }
 
+/*
+# def: Función que sirve para separar código de comentarios que están en la misma línea
+# return: Devuelve el código que se extrajo de la línea
+# data (in): Parametro que contendrá la línea que se necesita separar
+# index: Contiene el número de caracter donde se identificó el símbolo
+*/
 func extraerCodigo(data string) string {
 	var codigo string
 	index := strings.IndexAny(data, "-/")
@@ -569,6 +742,11 @@ func Tokenizador(data []byte, delimitador string) []string {
 	return strings.Split(string(data), delimitador)
 }
 
+/*
+# def: Función que sirve para generar los archivos necesarios
+# data (in): Parametro que contiene la información que contendrá el archivo
+# nombreFile (in): Parametro que contendrá el nombre del archivo
+*/
 func generarArchivos(data []byte, nombreFile string) {
 	path := "../data_sources/" + nombreFile
 	err := ioutil.WriteFile(path, data, 0644)
