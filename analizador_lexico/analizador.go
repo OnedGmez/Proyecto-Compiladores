@@ -197,7 +197,6 @@ var bandera bool = false
 var posibleComentario string
 var numLinea int = 0
 var tokensLexemas string
-var contTable int
 var nuevoElemento [1][5]string
 var log string
 var guardaTable string
@@ -490,33 +489,24 @@ func verificarAgregar(data string, op int) bool {
 # data (in): Recibe toda la línea del archivo para hacer las respectivas busquedas de errores
 */
 func analizarSimbolos(data string) {
-
 	if strings.Contains(data, "CREATE TABLE") {
 		guardaTable = data
-		if strings.Contains(data, "(") {
-			contTable++
-			banderaTable = true
-		} else {
-			llenarLog("ERROR:\tError en la apertura de parentesis, falta por aperturar parentesis, en la línea: " + strconv.Itoa(numLinea))
-			contTable = 0
+		if !strings.Contains(data, "(") {
+			llenarLog("ERROR:\tError en la creación de tablas, falta por aperturar parentesis, en la línea: " + strconv.Itoa(numLinea+1))
+			guardaTable = ""
 			banderaTable = false
+		} else {
+			banderaTable = true
 		}
 	} else {
-		if strings.Contains(data, "CREATE TABLE") || strings.Contains(data, "DROP") || strings.Contains(data, "ALTER") {
+		if strings.Contains(data, "CREATE TABLE") || strings.Contains(data, "DROP") || strings.Contains(data, "ALTER") || strings.Contains(data, "GO") {
 			if banderaTable {
 				if strings.Contains(data, ")") {
-					contTable = 0
 					banderaTable = false
 				} else {
 					llenarLog("ERROR:\tError en el cierre de parentesis, falta por cerrar parentesis, en la línea: " + strconv.Itoa(numLinea))
 					banderaTable = false
-					contTable = 0
 				}
-			}
-		} else {
-			if strings.Contains(data, ")") {
-				contTable = 0
-				banderaTable = false
 			}
 		}
 	}
@@ -528,13 +518,9 @@ func analizarSimbolos(data string) {
 			cCerrados := strings.Count(data, ")")
 			if cCerrados != cAbiertos {
 				if cCerrados < cAbiertos {
-					if contTable == 0 {
-						llenarLog("ERROR:\tError en la apertura de parentesis, falta por cerrar: " + strconv.Itoa(cAbiertos-cCerrados) + " parentesis, en la línea: " + strconv.Itoa(numLinea+1))
-					}
+					llenarLog("ERROR:\tError en el cierre de parentesis, falta por cerrar: " + strconv.Itoa(cAbiertos-cCerrados) + " parentesis, en la línea: " + strconv.Itoa(numLinea+1))
 				} else {
-					if contTable > 0 {
-						llenarLog("ERROR:\tError en el cierre de parentesis, falta por aperturar: " + strconv.Itoa(cCerrados-cAbiertos) + " parentesis, en la línea: " + strconv.Itoa(numLinea+1))
-					}
+					llenarLog("ERROR:\tError en la apertura de parentesis, falta por aperturar: " + strconv.Itoa(cCerrados-cAbiertos) + " parentesis, en la línea: " + strconv.Itoa(numLinea+1))
 				}
 			}
 		}
@@ -544,6 +530,7 @@ func analizarSimbolos(data string) {
 	if comillas {
 		cComillas := strings.Count(data, "'")
 		if cComillas%2 != 0 {
+
 			llenarLog("ERROR:\tError en la cadena de texto, faltan comillas ('), en la línea: " + strconv.Itoa(numLinea+1))
 		}
 	}
