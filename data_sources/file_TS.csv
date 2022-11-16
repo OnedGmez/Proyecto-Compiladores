@@ -65,6 +65,7 @@ TABLE;P.R. para Declarar Tablas;NE;NE;SQL
 VIEW;P.R. para Declarar Vistas;NE;NE;SQL
 INDEX;P.R. para Declarar Index;NE;NE;SQL
 PROCEDURE;P.R. para Declarar SP;NE;NE;SQL
+FUNCTION;P.R. para Declarar Funciones;NE;NE;SQL
 TRIGGER;P.R. para Declarar Disparadores;NE;NE;SQL
 UNIQUE;P.R. para Declarar Valores Unicos;NE;NE;SQL
 GROUP BY;Clausulas SQL;NE;NE;SQL
@@ -96,6 +97,7 @@ END;P.R. para Definir Fin de un bloque;NE;NE;SQL
 GO;P.R. para Indicar el fin de una instrucci�n;NE;NE;SQL
 SET;P.R. para Indicar valores a actualizar;NE;NE;SQL
 IF;Condicional;NE;NE;SQL
+WHILE;Bucle;NE;NE;SQL
 ELSE;Condicional;NE;NE;SQL
 NOCOUNT;Clausulas SQL;NE;NE;SQL
 (;Delimitador;NE;NE;SQL
@@ -112,3 +114,7 @@ NOT;Clausulas SQL;NE;NE;SQL
 REFERENCES;Clausulas SQL;NE;NE;SQL
 FOREIGN;Clausulas SQL;NE;NE;SQL
 CONVERT;Funcion de SQL;NE;NE;SQL
+RETURNS;Clausulas SQL;NE;NE;SQL
+GETDATE;Funcion de Fecha de SQL;NE;NE;SQL
+DEFAULT;Clausulas SQL;NE;NE;SQL
+LEN;Funcion de SQL;NE;NE;SQL
