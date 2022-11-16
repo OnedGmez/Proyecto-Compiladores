@@ -1,0 +1,220 @@
+------------------###################------------------
+            Código probado sin errores
+------------------###################------------------
+
+CREATE TABLE PremiacionesPago(
+CodMetodoPago VARCHAR(7) REFERENCES MetodosPago(CodMetodoPago) NOT NULL,
+FechaInIcio DATE NOT NULL DEFAULT(CONVERT(DATE,GETDATE(),103)),
+FechaFinal DATE NOT NULL,
+PorcentDescuento FLOAT(3) NOT NULL,
+MinimoParaAplicar FLOAT(3) NOT NULL
+)
+
+------------------###################------------------
+
+CREATE PROC RegistrarNuevoCargo
+@CodCargo VARCHAR(7),
+@DescripcionCargo VARCHAR(100)
+AS
+BEGIN
+	INSERT INTO Cargos(CodCargo, DescripcionCargo) VALUES(@CodCargo, @DescripcionCargo)
+END
+GO
+
+------------------###################------------------
+
+CREATE PROCEDURE RegistrarTalla 
+@Talla VARCHAR(4)
+AS
+BEGIN
+	INSERT INTO Tallas VALUES(@Talla)
+END
+GO
+
+------------------###################------------------
+
+CREATE TRIGGER ReflejarVenta
+ON DetallesFactura FOR INSERT
+AS
+BEGIN
+	SET NOCOUNT ON
+	DECLARE @Cantidad INT, @CodProducto VARCHAR(15), @CantidadVendida INT
+	SELECT @CodProducto = inserted.CodProductoSucursal FROM inserted
+	SELECT @CantidadVendida = inserted.Cantidad FROM inserted
+
+	SELECT @Cantidad = CantidadExistencia FROM InventarioSucursales WHERE InventarioSucursales.CodProductoSucursal = @CodProducto
+
+	IF(@Cantidad - @CantidadVendida) >= 0
+		BEGIN
+			UPDATE InventarioSucursales SET CantidadExistencia = @Cantidad - @CantidadVendida WHERE InventarioSucursales.CodProductoSucursal = @CodProducto
+		END
+END
+GO
+
+------------------###################------------------
+        Código probado con espacios y comentarios
+------------------###################------------------
+
+CREATE TABLE Personas(
+
+DNI VARCHAR(15) PRIMARY KEY NOT NULL,
+
+PrimerNombre VARCHAR(30) NOT NULL,
+
+SegundoNombre VARCHAR(30) NULL,
+
+
+ApellidoPaterno VARCHAR(30) NOT NULL,
+
+ApellidoMaterno VARCHAR(30) NULL,
+
+FechaNacimiento DATE NOT NULL,
+
+
+Sexo CHAR
+
+)
+
+------------------###################------------------
+
+CREATE TABLE Cargos( --HOLA ESTO ES UN COMENTARIO SIN ERROR
+CodCargo VARCHAR(7) PRIMARY KEY,
+DescripcionCargo VARCHAR(100) NOT NULL,
+
+)
+
+------------------###################------------------
+
+CREATE FUNCTION ObtenerSiguienteFactura -HOLA ESTO ES UN COMENTARIO CON ERROR
+(
+		@CAI VARCHAR(37)
+)
+RETURNS VARCHAR(19)
+AS
+BEGIN
+	DECLARE @UltimoNumUtilizado VARCHAR(19), @InicioRangoAutorizado VARCHAR(19), @FinRangoAutorizado VARCHAR(19), @SiguienteNumFactura VARCHAR(19)
+
+	SELECT @UltimoNumUtilizado = UltimoNumUtilizado FROM DocumentacionFiscal WHERE ValorFiscal = @CAI
+	SELECT @InicioRangoAutorizado = InicioRangoAutorizado FROM DocumentacionFiscal WHERE ValorFiscal = @CAI
+	SELECT @FinRangoAutorizado = FinRangoAutorizado FROM DocumentacionFiscal WHERE ValorFiscal = @CAI
+
+	IF(@UltimoNumUtilizado IS NULL)
+		BEGIN
+			SET @SiguienteNumFactura = @InicioRangoAutorizado;
+		END
+	ELSE
+		BEGIN
+			SELECT @SiguienteNumFactura = dbo.ObtenerNumeroFactura(@UltimoNumUtilizado,@FinRangoAutorizado)
+		END
+
+	RETURN @SiguienteNumFactura
+END
+GO
+
+------------------###################------------------
+
+CREATE TABLE RepresentantesProveedor(
+DNI VARCHAR(15) REFERENCES Personas(DNI) UNIQUE NOT NULL,
+/*
+ESTO ES UN COMENTARIO MULTIPLE SIN ERROR
+*/
+NumProveedorRepresentado INT REFERENCES Proveedores(NumProveedor)
+)
+
+------------------###################------------------
+CREATE FUNCTION ContraseniaRandom 
+()
+RETURNS VARCHAR(10)
+AS
+BEGIN    
+
+/*
+ESTO ES UN COMENTARIO MULTIPLE CONN ERROR
+*
+
+    DECLARE @chars AS VARCHAR(52),
+            @numbers AS VARCHAR(10),
+            @Caracteres AS VARCHAR(62),        
+            @contrasenia AS VARCHAR(62),
+            @index AS INT,
+            @cont AS INT
+
+    SET @contrasenia = ''
+    SET @Caracteres = ''    
+    SET @chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    SET @numbers = '0123456789'
+
+    SET @Caracteres = @chars + @numbers
+
+    SET @cont = 0
+    WHILE @cont < 20
+    BEGIN
+        SET @index = ceiling( ( SELECT rnd FROM RandomNumero ) * (len(@Caracteres)))
+        SET @contrasenia = @contrasenia + substring(@Caracteres, @index, 1)
+        SET @cont = @cont + 1
+    END    
+    *
+    ESTO ES UN COMENTARIO MULTIPLE CON ERROR
+    */
+        
+    RETURN @contrasenia
+
+END
+GO
+
+------------------###################------------------
+    Código probado con errores en parentesis y comillas
+------------------###################------------------
+
+CREATE TABLE PremiacionesPago
+CodMetodoPago VARCHAR(7) REFERENCES MetodosPago(CodMetodoPago) NOT NULL,
+FechaInIcio DATE NOT NULL DEFAULT(CONVERT(DATE,GETDATE(),103)),
+FechaFinal DATE NOT NULL,
+PorcentDescuento FLOAT(3) NOT NULL,
+MinimoParaAplicar FLOAT(3) NOT NULL
+)
+
+------------------###################------------------
+
+CREATE TABLE PremiacionesPago
+CodMetodoPago VARCHAR7) REFERENCES MetodosPago(CodMetodoPago) NOT NULL,
+FechaInIcio DATE NOT NULL DEFAULT(CONVERT(DATE,GETDATE(),103),
+FechaFinal DATE NOT NULL,
+PorcentDescuento FLOAT(3 NOT NULL,
+MinimoParaAplicar FLOAT(3) NOT NULL
+)
+
+------------------###################------------------
+
+CREATE FUNCTION ContraseniaRandom 
+()
+RETURNS VARCHAR(10)
+AS
+BEGIN    
+
+    DECLARE @chars AS VARCHAR(52),
+            @numbers AS VARCHAR(10),
+            @Caracteres AS VARCHAR(62),        
+            @contrasenia AS VARCHAR(62),
+            @index AS INT,
+            @cont AS INT
+
+    SET @contrasenia = ''
+    SET @Caracteres = ''    
+    SET @chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ
+    SET @numbers = '0123456789
+
+    SET @Caracteres = @chars + @numbers
+
+    SET @cont = 0
+    WHILE @cont < 20
+    BEGIN
+        SET @index = ceiling( ( SELECT rnd FROM RandomNumero ) * (len(@Caracteres)))
+        SET @contrasenia = @contrasenia + substring(@Caracteres, @index, 1)
+        SET @cont = @cont + 1
+    END    
+        
+    RETURN @contrasenia
+
+END
+GO
