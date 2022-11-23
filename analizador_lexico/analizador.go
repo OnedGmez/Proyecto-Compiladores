@@ -689,7 +689,6 @@ func AnalizarComentario(data string, num int) {
 			}
 		}
 	} else {
-		llenarPosibleComentario(string(dataSQL))
 		bandera = false
 	}
 }
@@ -731,7 +730,7 @@ func VerificarPotencialError(data []byte, num int) bool {
 
 	if bandera && (palabrasRenglon[0] == "*" || palabrasRenglon[0] == "/") {
 		llenarLog("ERROR:\tError en la sintaxis de comentario, en la línea: " + strconv.Itoa(num))
-		resp = false
+		resp = true
 	} else {
 		if !bandera && (palabrasRenglon[0] == "*" || palabrasRenglon[0] == "/") {
 			llenarLog("ERROR:\tError en la sintaxis de comentario, en la línea: " + strconv.Itoa(num))
